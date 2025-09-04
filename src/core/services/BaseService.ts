@@ -1,12 +1,12 @@
-import { PrismaClient } from '@prisma/client';
-import { Redis } from 'ioredis';
+import type { PrismaClient } from '@prisma/client';
+import type { Redis } from 'ioredis';
 import { Logger } from './Logger';
 
 /**
  * Base Service Class - Enterprise-grade foundation for all business services
  * Follows JDE patterns and Implementation Guide requirements
  */
-export abstract class BaseService<T> {
+export abstract class BaseService<T = unknown> {
   protected readonly prisma: PrismaClient;
   protected readonly redis: Redis;
   protected readonly logger: Logger;

@@ -42,7 +42,7 @@ export class ServiceFactory {
    */
   initialize(dependencies: ServiceDependencies): void {
     this.dependencies = dependencies;
-    this.logger.info('Service Factory initialized', {
+    dependencies.logger.info('Service Factory initialized', {
       tenantId: dependencies.tenantId,
       services: Object.keys(this.services)
     });

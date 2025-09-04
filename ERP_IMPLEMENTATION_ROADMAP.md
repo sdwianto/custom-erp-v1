@@ -71,7 +71,7 @@ Integrated roadmap combining **Performance Optimization** (Planning) + **Busines
   - [x] Document current database load patterns
   - [x] Setup performance alerting
 
-### **1.2 Core Service Layer Architecture (Week 2)**
+### **1.2 Core Service Layer Architecture (Week 2)** ✅
 > **Prinsip**: Setelah database siap, buat service layer yang robust dan reusable.
 
 #### **1.2.1 Base Service Implementation**
@@ -110,31 +110,31 @@ abstract class BaseService<T> {
 }
 ```
 
-#### **1.2.2 Service Factory Pattern**
-- [ ] **Create service registry**
-  - [ ] Service discovery mechanism
-  - [ ] Dependency injection container
-  - [ ] Service lifecycle management
-  - [ ] Error handling & retry logic
+#### **1.2.2 Service Factory Pattern** ✅
+- [] **Create service registry**
+  - [] Service discovery mechanism
+  - [] Dependency injection container
+  - [] Service lifecycle management
+  - [] Error handling & retry logic
 
-- [ ] **Implement core services**
-  - [ ] `DatabaseService` - database operations
-  - [ ] `CacheService` - Redis operations
-  - [ ] `AuditService` - audit logging
-  - [ ] `ValidationService` - data validation
+- [] **Implement core services**
+  - [] `DatabaseService` - database operations
+  - [] `CacheService` - Redis operations
+  - [] `AuditService` - audit logging
+  - [] `ValidationService` - data validation
 
-#### **1.2.3 Error Handling & Logging**
-- [ ] **Centralized error handling**
-  - [ ] Custom error classes (DatabaseError, ValidationError, etc.)
-  - [ ] Error logging dengan correlation ID
-  - [ ] Error reporting ke monitoring system
-  - [ ] User-friendly error messages
+#### **1.2.3 Error Handling & Logging** ✅
+- [] **Centralized error handling**
+  - [] Custom error classes (DatabaseError, ValidationError, etc.)
+  - [] Error logging dengan correlation ID
+  - [] Error reporting ke monitoring system
+  - [] User-friendly error messages
 
-- [ ] **Structured logging**
-  - [ ] JSON log format untuk machine readability
-  - [ ] Log levels (DEBUG, INFO, WARN, ERROR)
-  - [ ] Log correlation untuk request tracing
-  - [ ] Log rotation & retention policies
+- [] **Structured logging**
+  - [] JSON log format untuk machine readability
+  - [] Log levels (DEBUG, INFO, WARN, ERROR)
+  - [] Log correlation untuk request tracing
+  - [] Log rotation & retention policies
 
 ### **1.3 Event-Driven Architecture Foundation (Week 3)**
 > **Prinsip**: Setelah service layer siap, implement event system untuk real-time updates.
@@ -384,7 +384,7 @@ const PERFORMANCE_TARGETS = {
 ## ⚡ PHASE 2: BUSINESS MODULES + PERFORMANCE (Weeks 5-9)
 
 ### **2.1 Core Operations (Proposal P1)**
-#### **Equipment Management**
+#### **Rental & Equipment Management**
 - [ ] Equipment master + usage logging
 - [ ] Breakdown capture + rental hours
 - [ ] Real-time KPI dashboards (MTTR, MTBS, Availability%)
@@ -576,8 +576,9 @@ const PERFORMANCE_TARGETS = {
    - Testing automation
 
 ### **Weekly Milestones**
-- **Week 2**: Database optimization complete
-- **Week 3**: Offline engine foundation
+- **Week 1**: ✅ Database optimization complete
+- **Week 2**: ✅ Core Service Layer Architecture complete
+- **Week 3**: Event-driven architecture foundation
 - **Week 4**: Performance monitoring active
 - **Week 6**: Core business modules working
 - **Week 8**: Advanced features implemented
