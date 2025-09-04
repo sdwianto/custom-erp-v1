@@ -294,12 +294,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  tooltip="Offline Sync"
-                  isActive={isActive("/sync")}
+                  tooltip="Offline Management"
+                  isActive={isActive("/offline") || isActive("/sync") || isActive("/monitoring")}
                 >
-                  <Link href="/sync">
+                  <Link href="/offline">
                     <Cloud className="mr-2 h-4 w-4" />
-                    Offline Sync
+                    Offline Management
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

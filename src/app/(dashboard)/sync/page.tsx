@@ -1,537 +1,444 @@
-import React from 'react';
+'use client';
 
+import React, { useEffect } from 'react';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import {
-  Cloud, 
   Wifi, 
   RefreshCw, 
   CheckCircle, 
   AlertTriangle,
   Clock,
-  Download,
-  Upload,
   Database,
   Activity,
   Settings,
   Eye,
-  Play,
-
-  ArrowUpDown,
-  FileText,
   HardDrive,
   Smartphone,
   Monitor,
-  Tablet
+  Tablet,
+  X,
+  WifiOff
 } from 'lucide-react';
 
+// Types for conflicts and mutations
+interface Conflict {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  conflictType: string;
+  createdAt: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
+
+interface PendingMutation {
+  id: string;
+  kind: string;
+  createdAt: string;
+  retryCount: number;
+  status: 'pending' | 'processing' | 'failed' | 'completed';
+  entityType: string;
+  entityId: string;
+}
+
 const OfflineSyncPage: React.FC = () => {
-  // Mock data for offline sync
-  const syncStats = {
-    totalDevices: 12,
-    onlineDevices: 8,
-    offlineDevices: 4,
-    pendingSync: 156,
-    syncedToday: 1247,
-    conflicts: 3
-  };
+  const [isClient, setIsClient] = React.useState(false);
 
+  // Use offline sync hook
+  const {
+    isOnline,
+    isInitialized,
+    isSyncing,
+    stats,
+    performance,
+    conflicts: rawConflicts,
+    pendingMutations: rawPendingMutations,
+    error,
+    initialize,
+    retryMutation,
+    resolveConflict,
+    clearError,
+    forceSync
+  } = useOfflineSync('default-tenant', 'current-user');
+
+  // Ensure conflicts and pendingMutations are arrays with proper types
+  const conflicts: Conflict[] = Array.isArray(rawConflicts) ? rawConflicts as unknown as Conflict[] : [];
+  const pendingMutations: PendingMutation[] = Array.isArray(rawPendingMutations) ? rawPendingMutations as unknown as PendingMutation[] : [];
+
+  // Initialize on mount
+  useEffect(() => {
+    setIsClient(true);
+    if (!isInitialized) {
+      void initialize();
+    }
+  }, [isInitialized, initialize]);
+
+  // Mock data for devices (in real app, this would come from API)
   const devices = [
-    {
-      id: 1,
-      name: 'Port Moresby Office',
-      type: 'Desktop',
-      status: 'Online',
-      lastSync: '2024-01-15 10:30',
-      pendingRecords: 0,
-      syncProgress: 100,
-      location: 'Port Moresby',
-      ip: '192.168.1.100'
-    },
-    {
-      id: 2,
-      name: 'Lae Warehouse',
-      type: 'Desktop',
-      status: 'Online',
-      lastSync: '2024-01-15 10:25',
-      pendingRecords: 0,
-      syncProgress: 100,
-      location: 'Lae',
-      ip: '192.168.1.101'
-    },
-    {
-      id: 3,
-      name: 'Mount Hagen Site',
-      type: 'Tablet',
-      status: 'Offline',
-      lastSync: '2024-01-15 08:15',
-      pendingRecords: 45,
-      syncProgress: 0,
-      location: 'Mount Hagen',
-      ip: '192.168.1.102'
-    },
-    {
-      id: 4,
-      name: 'Goroka Field Office',
-      type: 'Mobile',
-      status: 'Offline',
-      lastSync: '2024-01-15 07:30',
-      pendingRecords: 23,
-      syncProgress: 0,
-      location: 'Goroka',
-      ip: '192.168.1.103'
-    },
-    {
-      id: 5,
-      name: 'Madang Branch',
-      type: 'Desktop',
-      status: 'Online',
-      lastSync: '2024-01-15 10:20',
-      pendingRecords: 0,
-      syncProgress: 100,
-      location: 'Madang',
-      ip: '192.168.1.104'
-    }
+    { id: '1', name: 'Field Tablet 1', type: 'tablet', status: 'online', lastSync: '2024-01-15T10:30:00Z' },
+    { id: '2', name: 'Office Desktop', type: 'desktop', status: 'online', lastSync: '2024-01-15T10:25:00Z' },
+    { id: '3', name: 'Mobile Phone', type: 'mobile', status: 'offline', lastSync: '2024-01-15T09:45:00Z' },
+    { id: '4', name: 'Field Tablet 2', type: 'tablet', status: 'online', lastSync: '2024-01-15T10:20:00Z' }
   ];
-
-  const syncQueue = [
-    {
-      id: 1,
-      type: 'Inventory Update',
-      device: 'Mount Hagen Site',
-      records: 45,
-      status: 'Pending',
-      timestamp: '2024-01-15 08:15',
-      priority: 'High'
-    },
-    {
-      id: 2,
-      type: 'Customer Data',
-      device: 'Goroka Field Office',
-      records: 23,
-      status: 'Pending',
-      timestamp: '2024-01-15 07:30',
-      priority: 'Medium'
-    },
-    {
-      id: 3,
-      type: 'Financial Transaction',
-      device: 'Port Moresby Office',
-      records: 12,
-      status: 'Synced',
-      timestamp: '2024-01-15 10:30',
-      priority: 'High'
-    },
-    {
-      id: 4,
-      type: 'Equipment Status',
-      device: 'Lae Warehouse',
-      records: 8,
-      status: 'Synced',
-      timestamp: '2024-01-15 10:25',
-      priority: 'Low'
-    }
-  ];
-
-  const conflicts = [
-    {
-      id: 1,
-      type: 'Inventory Conflict',
-      device: 'Mount Hagen Site',
-      description: 'Duplicate inventory entry for Excavator #EX-001',
-      timestamp: '2024-01-15 08:15',
-      status: 'Resolved',
-      resolution: 'Auto-merged duplicate entries'
-    },
-    {
-      id: 2,
-      type: 'Customer Data Conflict',
-      device: 'Goroka Field Office',
-      description: 'Conflicting customer phone numbers',
-      timestamp: '2024-01-15 07:30',
-      status: 'Pending',
-      resolution: 'Manual review required'
-    },
-    {
-      id: 3,
-      type: 'Financial Data Conflict',
-      device: 'Port Moresby Office',
-      description: 'Duplicate transaction ID detected',
-      timestamp: '2024-01-15 10:30',
-      status: 'Resolved',
-      resolution: 'Kept most recent transaction'
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Online':
-      case 'Synced':
-      case 'Resolved':
-        return 'bg-green-500';
-      case 'Offline':
-      case 'Pending':
-        return 'bg-yellow-500';
-      case 'Failed':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'Online':
-      case 'Synced':
-      case 'Resolved':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'Offline':
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'Failed':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'Low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
-      case 'Desktop':
-        return <Monitor className="h-4 w-4" />;
-      case 'Mobile':
-        return <Smartphone className="h-4 w-4" />;
-      case 'Tablet':
+      case 'tablet':
         return <Tablet className="h-4 w-4" />;
+      case 'mobile':
+        return <Smartphone className="h-4 w-4" />;
+      case 'desktop':
+        return <Monitor className="h-4 w-4" />;
       default:
         return <Database className="h-4 w-4" />;
     }
-  };  return (
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'online':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'offline':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'syncing':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+  };
+
+  const formatTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+  };
+
+  // Prevent hydration error by not rendering until client-side
+  if (!isClient) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Error initializing offline sync: {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-2"
+              onClick={() => clearError()}
+            >
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
     <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Offline Sync</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage offline synchronization across all devices</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <Button className="w-full sm:w-auto">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Force Sync
-            </Button>
-          </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Offline Sync</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage offline synchronization across all devices</p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Devices</CardTitle>
-              <Database className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{syncStats.totalDevices}</div>
-              <p className="text-xs text-muted-foreground">Connected devices</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Online Devices</CardTitle>
-              <Wifi className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{syncStats.onlineDevices}</div>
-              <p className="text-xs text-muted-foreground">Currently connected</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Sync</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{syncStats.pendingSync}</div>
-              <p className="text-xs text-muted-foreground">Records waiting</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conflicts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{syncStats.conflicts}</div>
-              <p className="text-xs text-muted-foreground">Need resolution</p>
-            </CardContent>
-          </Card>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="w-full sm:w-auto">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+          <Button 
+            onClick={forceSync} 
+            disabled={isSyncing || !isOnline}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Syncing...' : 'Force Sync'}
+          </Button>
         </div>
+      </div>
 
-        {/* Device Status */}
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="ghost" size="sm" onClick={clearError}>
+              <X className="h-4 w-4" />
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Connection Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {isOnline ? <Wifi className="h-5 w-5 text-green-500" /> : <WifiOff className="h-5 w-5 text-red-500" />}
+            Connection Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {isOnline ? 'Connected to server' : 'Offline mode'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {isInitialized ? 'Sync system initialized' : 'Initializing...'}
+              </p>
+            </div>
+            <Badge className={isOnline ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+              {isOnline ? 'Online' : 'Offline'}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Devices</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{devices.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {devices.filter(d => d.status === 'online').length} online
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Sync</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{(stats as unknown as Record<string, unknown>)?.pendingMutations as number ?? 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {(stats as unknown as Record<string, unknown>)?.queueSize as number ?? 0} in queue
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Conflicts</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{conflicts.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {conflicts.filter(c => c.severity === 'critical').length} critical
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sync Success Rate</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {(stats as unknown as Record<string, unknown>)?.successRate ? `${((stats as unknown as Record<string, unknown>).successRate as number * 100).toFixed(1)}%` : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Last 24 hours
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Performance Metrics */}
+      {performance && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              Device Status
+              Performance Metrics
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium">Device</th>
-                    <th className="text-left py-3 px-4 font-medium">Type</th>
-                    <th className="text-left py-3 px-4 font-medium">Status</th>
-                    <th className="text-left py-3 px-4 font-medium">Last Sync</th>
-                    <th className="text-left py-3 px-4 font-medium">Pending</th>
-                    <th className="text-left py-3 px-4 font-medium">Progress</th>
-                    <th className="text-left py-3 px-4 font-medium">Location</th>
-                    <th className="text-right py-3 px-4 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {devices.map((device) => (
-                    <tr key={device.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="py-3 px-4">
-                        <div className="font-medium">{device.name}</div>
-                        <div className="text-sm text-muted-foreground">{device.ip}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          {getDeviceIcon(device.type)}
-                          {device.type}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${getStatusColor(device.status)}`}></div>
-                          <Badge className={getStatusBadgeColor(device.status)}>
-                            {device.status}
-                          </Badge>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          {device.lastSync}
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium">{device.pendingRecords}</div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${device.syncProgress}%` }}
-                          ></div>
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {device.syncProgress}%
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        {device.location}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <RefreshCw className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm font-medium">API Latency</p>
+                <p className="text-2xl font-bold">{performance?.apiLatency?.toFixed(0) ?? '0'}ms</p>
+                <Progress 
+                  value={((performance?.apiLatency ?? 0) / 200) * 100} 
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Database Latency</p>
+                <p className="text-2xl font-bold">{performance?.databaseLatency?.toFixed(0) ?? '0'}ms</p>
+                <Progress 
+                  value={((performance?.databaseLatency ?? 0) / 100) * 100} 
+                  className="mt-2"
+                />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Event Processing</p>
+                <p className="text-2xl font-bold">{performance?.eventProcessingLatency?.toFixed(0) ?? '0'}ms</p>
+                <Progress 
+                  value={((performance?.eventProcessingLatency ?? 0) / 50) * 100}
+                  className="mt-2"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
+      )}
 
-        {/* Sync Queue and Conflicts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Sync Queue */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ArrowUpDown className="h-5 w-5" />
-                Sync Queue
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {syncQueue.map((item) => (
-                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(item.status)}`}></div>
-                      <div>
-                        <div className="font-medium">{item.type}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {item.device} • {item.records} records
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">{item.timestamp}</div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={getStatusBadgeColor(item.status)}>
-                          {item.status}
-                        </Badge>
-                        <Badge className={getPriorityColor(item.priority)}>
-                          {item.priority}
-                        </Badge>
-                      </div>
-                    </div>
+      {/* Devices List */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HardDrive className="h-5 w-5" />
+            Connected Devices
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {devices.map((device) => (
+              <div key={device.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  {getDeviceIcon(device.type)}
+                  <div>
+                    <p className="font-medium">{device.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Last sync: {formatTime(device.lastSync)}
+                    </p>
                   </div>
-                ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={getStatusColor(device.status)}>
+                    {device.status}
+                  </Badge>
+                  <Button variant="ghost" size="sm">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Data Conflicts */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Data Conflicts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {conflicts.map((conflict) => (
-                  <div key={conflict.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(conflict.status)}`}></div>
-                      <div>
-                        <div className="font-medium">{conflict.type}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {conflict.description}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium">{conflict.timestamp}</div>
-                      <Badge className={getStatusBadgeColor(conflict.status)}>
-                        {conflict.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sync Configuration */}
+      {/* Conflicts */}
+      {conflicts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Sync Configuration</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Conflicts ({conflicts.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Cloud className="h-5 w-5 text-blue-500" />
-                  <h4 className="font-medium text-blue-800 dark:text-blue-200">Auto Sync</h4>
+            <div className="space-y-4">
+              {conflicts.map((conflict) => (
+                <div key={conflict.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{conflict.description}</p>
+                    <p className="text-sm text-gray-500">
+                      Severity: {conflict.severity} | Type: {conflict.conflictType}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      className={
+                        conflict.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                        conflict.severity === 'high' ? 'bg-orange-100 text-orange-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }
+                    >
+                      {conflict.severity}
+                    </Badge>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => resolveConflict(conflict.id, 'server_wins')}
+                    >
+                      Resolve
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Automatically sync data every 30 minutes when devices are online.
-                </p>
-                <div className="mt-3">
-                  <Button variant="outline" size="sm">
-                    <Play className="h-4 w-4 mr-2" />
-                    Enable
-                  </Button>
-                </div>
-              </div>
-              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <h4 className="font-medium text-green-800 dark:text-green-200">Conflict Resolution</h4>
-                </div>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Automatic conflict resolution with manual review for complex cases.
-                </p>
-                <div className="mt-3">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configure
-                  </Button>
-                </div>
-              </div>
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <HardDrive className="h-5 w-5 text-yellow-500" />
-                  <h4 className="font-medium text-yellow-800 dark:text-yellow-200">Data Retention</h4>
-                </div>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Keep offline data for 30 days before automatic cleanup.
-                </p>
-                <div className="mt-3">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configure
-                  </Button>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
+      )}
 
-        {/* Quick Actions */}
+      {/* Pending Mutations */}
+      {pendingMutations.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Pending Mutations ({pendingMutations.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <RefreshCw className="h-6 w-6" />
-                <span>Sync All Devices</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <Download className="h-6 w-6" />
-                <span>Download Data</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <Upload className="h-6 w-6" />
-                <span>Upload Data</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex-col gap-2">
-                <FileText className="h-6 w-6" />
-                <span>View Logs</span>
-              </Button>
+            <div className="space-y-4">
+              {pendingMutations.slice(0, 5).map((mutation) => (
+                <div key={mutation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{mutation.kind}</p>
+                    <p className="text-sm text-gray-500">
+                      Created: {formatTime(mutation.createdAt)} | 
+                      Retries: {mutation.retryCount}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      className={
+                        mutation.status === 'failed' ? 'bg-red-100 text-red-800' :
+                        mutation.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }
+                    >
+                      {mutation.status}
+                    </Badge>
+                    {mutation.status === 'failed' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => retryMutation(mutation.id)}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {pendingMutations.length > 5 && (
+                <p className="text-sm text-gray-500 text-center">
+                  ... and {pendingMutations.length - 5} more
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
-      </div>  );
+      )}
+    </div>
+  );
 };
 
-export default OfflineSyncPage; 
+export default OfflineSyncPage;
