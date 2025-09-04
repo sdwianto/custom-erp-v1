@@ -3,498 +3,372 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting ERP database seeding...');
+  console.log('🌱 Starting database seeding...');
 
-  // ========================================
-  // CORE SYSTEM SEEDING
-  // ========================================
-
-  // Create Roles
-  console.log('Creating roles...');
-  const adminRole = await prisma.role.upsert({
-    where: { name: 'Administrator' },
+  // Create default tenant
+  const tenant = await prisma.tenant.upsert({
+    where: { id: 'default-tenant' },
     update: {},
     create: {
+      id: 'default-tenant',
+      name: 'CA Mine ERP',
+      isActive: true
+    }
+  });
+
+  // Create roles (without description field)
+  const adminRole = await prisma.role.upsert({
+    where: { id: 'admin-role' },
+    update: {},
+    create: {
+      id: 'admin-role',
       name: 'Administrator',
-      description: 'Full system access',
-      permissions: [
-        'user:read', 'user:write', 'user:delete',
-        'role:read', 'role:write', 'role:delete',
-        'product:read', 'product:write', 'product:delete',
-        'inventory:read', 'inventory:write', 'inventory:delete',
-        'equipment:read', 'equipment:write', 'equipment:delete',
-        'finance:read', 'finance:write', 'finance:delete',
-        'hr:read', 'hr:write', 'hr:delete',
-        'crm:read', 'crm:write', 'crm:delete',
-        'report:read', 'report:write',
-        'audit:read'
-      ]
+      tenantId: tenant.id
     }
   });
 
   const managerRole = await prisma.role.upsert({
-    where: { name: 'Manager' },
+    where: { id: 'manager-role' },
     update: {},
     create: {
+      id: 'manager-role',
       name: 'Manager',
-      description: 'Department manager access',
-      permissions: [
-        'user:read',
-        'product:read', 'product:write',
-        'inventory:read', 'inventory:write',
-        'equipment:read', 'equipment:write',
-        'finance:read', 'finance:write',
-        'hr:read', 'hr:write',
-        'crm:read', 'crm:write',
-        'report:read'
-      ]
+      tenantId: tenant.id
     }
   });
 
   const operatorRole = await prisma.role.upsert({
-    where: { name: 'Operator' },
+    where: { id: 'operator-role' },
     update: {},
     create: {
+      id: 'operator-role',
       name: 'Operator',
-      description: 'Basic operational access',
-      permissions: [
-        'product:read',
-        'inventory:read', 'inventory:write',
-        'equipment:read'
-      ]
+      tenantId: tenant.id
     }
   });
 
-  // Create Admin User
-  console.log('Creating admin user...');
+  // Create users (without firstName field)
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@nextgen.com' },
+    where: { id: 'admin-user' },
     update: {},
     create: {
+      id: 'admin-user',
       email: 'admin@nextgen.com',
-      firstName: 'System',
-      lastName: 'Administrator',
-      phone: '+67512345678',
-      roleId: adminRole.id
+      name: 'System Administrator',
+      tenantId: tenant.id
     }
   });
 
-  // ========================================
-  // INVENTORY & PROCUREMENT SEEDING
-  // ========================================
-
-  // Create Products
-  console.log('Creating products...');
-  const excavator = await prisma.product.upsert({
-    where: { sku: 'EXC-001' },
+  // Create items (using correct table name 'item' not 'product')
+  const excavator = await prisma.item.upsert({
+    where: { id: 'excavator-item' },
     update: {},
     create: {
-      name: 'Excavator Komatsu PC200',
-      code: 'EXC-001',
-      sku: 'EXC-001',
-      description: '20-ton hydraulic excavator for construction and mining',
-      price: 500000000, // 500 million IDR
-      costPrice: 450000000,
-      minStockLevel: 1,
-      maxStockLevel: 5,
-      currentStock: 2,
-      unitOfMeasure: 'UNIT'
+      id: 'excavator-item',
+      number: 'EXC-001',
+      description: 'Excavator Komatsu PC200',
+      type: 'Equipment',
+      stdCost: 0,
+      lastCost: 0,
+      avgCost: 0,
+      tenantId: tenant.id
     }
   });
 
-  const bulldozer = await prisma.product.upsert({
-    where: { sku: 'BULL-001' },
+  const bulldozer = await prisma.item.upsert({
+    where: { id: 'bulldozer-item' },
     update: {},
     create: {
-      name: 'Bulldozer Caterpillar D6',
-      code: 'BULL-001',
-      sku: 'BULL-001',
-      description: 'Track-type tractor for earthmoving operations',
-      price: 750000000, // 750 million IDR
-      costPrice: 675000000,
-      minStockLevel: 1,
-      maxStockLevel: 3,
-      currentStock: 1,
-      unitOfMeasure: 'UNIT'
+      id: 'bulldozer-item',
+      number: 'BUL-001',
+      description: 'Bulldozer Caterpillar D6',
+      type: 'Equipment',
+      stdCost: 0,
+      lastCost: 0,
+      avgCost: 0,
+      tenantId: tenant.id
     }
   });
 
-  const hydraulicPump = await prisma.product.upsert({
-    where: { sku: 'HP-001' },
+  const hydraulicPump = await prisma.item.upsert({
+    where: { id: 'pump-item' },
     update: {},
     create: {
-      name: 'Hydraulic Pump Assembly',
-      code: 'HP-001',
-      sku: 'HP-001',
-      description: 'Replacement hydraulic pump for excavators',
-      price: 15000000, // 15 million IDR
-      costPrice: 12000000,
-      minStockLevel: 5,
-      maxStockLevel: 20,
-      currentStock: 12,
-      unitOfMeasure: 'PCS'
+      id: 'pump-item',
+      number: 'PMP-001',
+      description: 'Hydraulic Pump Assembly',
+      type: 'Spare Part',
+      stdCost: 0,
+      lastCost: 0,
+      avgCost: 0,
+      tenantId: tenant.id
     }
   });
 
-  const safetyHelmet = await prisma.product.upsert({
-    where: { sku: 'SH-001' },
+  const safetyHelmet = await prisma.item.upsert({
+    where: { id: 'helmet-item' },
     update: {},
     create: {
-      name: 'Safety Helmet',
-      code: 'SH-001',
-      sku: 'SH-001',
-      description: 'Industrial safety helmet with chin strap',
-      price: 150000, // 150k IDR
-      costPrice: 100000,
-      minStockLevel: 50,
-      maxStockLevel: 200,
-      currentStock: 150,
-      unitOfMeasure: 'PCS'
+      id: 'helmet-item',
+      number: 'SAF-001',
+      description: 'Safety Helmet',
+      type: 'Safety Equipment',
+      stdCost: 0,
+      lastCost: 0,
+      avgCost: 0,
+      tenantId: tenant.id
     }
   });
 
-  const dieselFuel = await prisma.product.upsert({
-    where: { sku: 'FUEL-001' },
+  const dieselFuel = await prisma.item.upsert({
+    where: { id: 'fuel-item' },
     update: {},
     create: {
-      name: 'Diesel Fuel',
-      code: 'FUEL-001',
-      sku: 'FUEL-001',
-      description: 'High-quality diesel fuel for heavy equipment',
-      price: 15000, // 15k IDR per liter
-      costPrice: 12000,
-      minStockLevel: 1000,
-      maxStockLevel: 5000,
-      currentStock: 3000,
-      unitOfMeasure: 'LITER'
+      id: 'fuel-item',
+      number: 'FUEL-001',
+      description: 'Diesel Fuel',
+      type: 'Fuel',
+      stdCost: 0,
+      lastCost: 0,
+      avgCost: 0,
+      tenantId: tenant.id
     }
   });
 
-  // Create AddressBook entries first
-  console.log('Creating address book entries...');
-  const komatsuAddress = await prisma.addressBook.create({
-    data: {
-      alphaName: 'Komatsu Indonesia',
+  // Create address books (using correct field names from schema)
+  const supplier1 = await prisma.addressBook.upsert({
+    where: { id: 'supplier-1' },
+    update: {},
+    create: {
+      id: 'supplier-1',
+      alphaName: 'PT Komatsu Indonesia',
       isVendor: true,
-      addressLine1: 'Jl. Raya Bekasi Km. 25',
-      city: 'Bekasi',
-      state: 'Jawa Barat',
-      postalCode: '17530',
-      country: 'Indonesia',
-      phone: '+62-21-8990-1234',
-      email: 'info@komatsu.co.id',
-      taxNumber: '01.234.567.8-123.000'
+      isCustomer: false,
+      isEmployee: false,
+      tenantId: tenant.id
     }
   });
 
-  const caterpillarAddress = await prisma.addressBook.create({
-    data: {
-      alphaName: 'Caterpillar Indonesia',
+  const supplier2 = await prisma.addressBook.upsert({
+    where: { id: 'supplier-2' },
+    update: {},
+    create: {
+      id: 'supplier-2',
+      alphaName: 'PT Caterpillar Indonesia',
       isVendor: true,
-      addressLine1: 'Jl. Sudirman Kav. 52-53',
-      city: 'Jakarta',
-      state: 'DKI Jakarta',
-      postalCode: '12190',
-      country: 'Indonesia',
-      phone: '+62-21-515-1234',
-      email: 'info@cat.com',
-      taxNumber: '01.234.567.8-456.000'
+      isCustomer: false,
+      isEmployee: false,
+      tenantId: tenant.id
     }
   });
 
-  const miningCorpAddress = await prisma.addressBook.create({
-    data: {
-      alphaName: 'Mining Corporation Ltd',
-      isCustomer: true,
-      addressLine1: 'Jl. Gatot Subroto Kav. 18',
-      city: 'Jakarta',
-      state: 'DKI Jakarta',
-      postalCode: '12950',
-      country: 'Indonesia',
-      phone: '+62-21-520-1234',
-      email: 'info@miningcorp.co.id',
-      taxNumber: '01.234.567.8-789.000'
-    }
-  });
-
-  const constructionLtdAddress = await prisma.addressBook.create({
-    data: {
-      alphaName: 'Construction Ltd',
-      isCustomer: true,
-      addressLine1: 'Jl. Thamrin No. 10',
-      city: 'Jakarta',
-      state: 'DKI Jakarta',
-      postalCode: '10350',
-      country: 'Indonesia',
-      phone: '+62-21-310-1234',
-      email: 'info@construction.co.id',
-      taxNumber: '01.234.567.8-012.000'
-    }
-  });
-
-  const hrManagerAddress = await prisma.addressBook.create({
-    data: {
-      alphaName: 'Jane Doe',
-      isEmployee: true,
-      addressLine1: 'Jl. Sudirman No. 123',
-      city: 'Jakarta',
-      state: 'DKI Jakarta',
-      postalCode: '12190',
-      country: 'Indonesia',
-      phone: '+62-21-515-5678',
-      email: 'jane.doe@nextgen.com'
-    }
-  });
-
-  // Create Suppliers
-  console.log('Creating suppliers...');
-  const komatsuSupplier = await prisma.supplier.upsert({
-    where: { supplierCode: 'KOMATSU' },
-    update: {},
-    create: {
-      supplierCode: 'KOMATSU',
-      addressBookId: komatsuAddress.id,
-      paymentTerms: 'Net 30',
-      creditLimit: 1000000000,
-      currentBalance: 0,
-      onTimeDeliveryRate: 0.95,
-      qualityRating: 4.8
-    }
-  });
-
-  const caterpillarSupplier = await prisma.supplier.upsert({
-    where: { supplierCode: 'CAT' },
-    update: {},
-    create: {
-      supplierCode: 'CAT',
-      addressBookId: caterpillarAddress.id,
-      paymentTerms: 'Net 45',
-      creditLimit: 2000000000,
-      currentBalance: 0,
-      onTimeDeliveryRate: 0.98,
-      qualityRating: 4.9
-    }
-  });
-
-  // ========================================
-  // EQUIPMENT & MAINTENANCE SEEDING
-  // ========================================
-
-  // Create Equipment
-  console.log('Creating equipment...');
+  // Create equipment (using correct field names from schema)
   const excavatorEquipment = await prisma.equipment.upsert({
-    where: { code: 'EQ-EXC-001' },
+    where: { id: 'excavator-equipment' },
     update: {},
     create: {
-      name: 'Excavator Komatsu PC200',
-      code: 'EQ-EXC-001',
-      model: 'PC200-8',
-      serialNumber: 'KOM2024001',
-      manufacturer: 'Komatsu',
-      acquisitionCost: 450000000,
-      currentValue: 450000000,
-      status: 'AVAILABLE',
-      location: 'Main Yard',
-      lastMaintenanceDate: new Date('2024-01-15'),
-      nextMaintenanceDate: new Date('2024-04-15'),
-      totalOperatingHours: 0
+      id: 'excavator-equipment',
+      code: 'EXC-001',
+      type: 'Excavator',
+      acquisitionCost: 0,
+      currentValue: 0,
+      tenantId: tenant.id
     }
   });
 
   const bulldozerEquipment = await prisma.equipment.upsert({
-    where: { code: 'EQ-BULL-001' },
+    where: { id: 'bulldozer-equipment' },
     update: {},
     create: {
-      name: 'Bulldozer Caterpillar D6',
-      code: 'EQ-BULL-001',
-      model: 'D6T',
-      serialNumber: 'CAT2024001',
-      manufacturer: 'Caterpillar',
-      acquisitionCost: 675000000,
-      currentValue: 675000000,
-      status: 'AVAILABLE',
-      location: 'Main Yard',
-      lastMaintenanceDate: new Date('2024-02-01'),
-      nextMaintenanceDate: new Date('2024-05-01'),
-      totalOperatingHours: 0
+      id: 'bulldozer-equipment',
+      code: 'BUL-001',
+      type: 'Bulldozer',
+      acquisitionCost: 0,
+      currentValue: 0,
+      tenantId: tenant.id
     }
   });
 
-  // ========================================
-  // FINANCE & ACCOUNTING SEEDING
-  // ========================================
-
-  // Create Chart of Accounts
-  console.log('Creating chart of accounts...');
+  // Create chart accounts (using correct field names from schema)
   const cashAccount = await prisma.chartAccount.upsert({
-    where: { accountNumber: '1000' },
+    where: { id: 'cash-account' },
     update: {},
     create: {
-      accountNumber: '1000',
-      name: 'Cash',
-      type: 'ASSET',
-      balance: 1000000000 // 1 billion IDR
+      id: 'cash-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '1000',
+      subsidiary: 'CA-MINE',
+      description: 'Cash',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
   const accountsReceivable = await prisma.chartAccount.upsert({
-    where: { accountNumber: '1100' },
+    where: { id: 'ar-account' },
     update: {},
     create: {
-      accountNumber: '1100',
-      name: 'Accounts Receivable',
-      type: 'ASSET',
-      balance: 0
+      id: 'ar-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '1100',
+      subsidiary: 'CA-MINE',
+      description: 'Accounts Receivable',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
   const inventoryAccount = await prisma.chartAccount.upsert({
-    where: { accountNumber: '1200' },
+    where: { id: 'inventory-account' },
     update: {},
     create: {
-      accountNumber: '1200',
-      name: 'Inventory',
-      type: 'ASSET',
-      balance: 0
+      id: 'inventory-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '1200',
+      subsidiary: 'CA-MINE',
+      description: 'Inventory',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
   const equipmentAccount = await prisma.chartAccount.upsert({
-    where: { accountNumber: '1300' },
+    where: { id: 'equipment-account' },
     update: {},
     create: {
-      accountNumber: '1300',
-      name: 'Equipment',
-      type: 'ASSET',
-      balance: 1125000000 // 1.125 billion IDR
+      id: 'equipment-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '1300',
+      subsidiary: 'CA-MINE',
+      description: 'Equipment',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
   const accountsPayable = await prisma.chartAccount.upsert({
-    where: { accountNumber: '2000' },
+    where: { id: 'ap-account' },
     update: {},
     create: {
-      accountNumber: '2000',
-      name: 'Accounts Payable',
-      type: 'LIABILITY',
-      balance: 0
+      id: 'ap-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '2000',
+      subsidiary: 'CA-MINE',
+      description: 'Accounts Payable',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
   const revenueAccount = await prisma.chartAccount.upsert({
-    where: { accountNumber: '4000' },
+    where: { id: 'revenue-account' },
     update: {},
     create: {
-      accountNumber: '4000',
-      name: 'Sales Revenue',
-      type: 'REVENUE',
-      balance: 0
-    }
-  });
-
-  const rentalRevenueAccount = await prisma.chartAccount.upsert({
-    where: { accountNumber: '4100' },
-    update: {},
-    create: {
-      accountNumber: '4100',
-      name: 'Rental Revenue',
-      type: 'REVENUE',
-      balance: 0
+      id: 'revenue-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '4000',
+      subsidiary: 'CA-MINE',
+      description: 'Revenue',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
   const costOfGoodsSold = await prisma.chartAccount.upsert({
-    where: { accountNumber: '5000' },
+    where: { id: 'cogs-account' },
     update: {},
     create: {
-      accountNumber: '5000',
-      name: 'Cost of Goods Sold',
-      type: 'EXPENSE',
-      balance: 0
+      id: 'cogs-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '4100',
+      subsidiary: 'CA-MINE',
+      description: 'Cost of Goods Sold',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
-  const maintenanceExpense = await prisma.chartAccount.upsert({
-    where: { accountNumber: '5100' },
+  const operatingExpense = await prisma.chartAccount.upsert({
+    where: { id: 'opex-account' },
     update: {},
     create: {
-      accountNumber: '5100',
-      name: 'Maintenance Expense',
-      type: 'EXPENSE',
-      balance: 0
+      id: 'opex-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '5000',
+      subsidiary: 'CA-MINE',
+      description: 'Operating Expenses',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
-  // ========================================
-  // CRM SEEDING
-  // ========================================
-
-  // Create Customers
-  console.log('Creating customers...');
-  const miningCorp = await prisma.customer.upsert({
-    where: { customerNumber: 'CUST-001' },
+  const depreciationAccount = await prisma.chartAccount.upsert({
+    where: { id: 'depreciation-account' },
     update: {},
     create: {
-      customerNumber: 'CUST-001',
-      addressBookId: miningCorpAddress.id,
-      customerType: 'COMPANY',
-      industry: 'Mining',
-      creditLimit: 1000000000, // 1 billion IDR
-      currentBalance: 0,
-      status: 'ACTIVE'
+      id: 'depreciation-account',
+      company: 'CA-MINE',
+      businessUnit: 'MAIN',
+      object: '5100',
+      subsidiary: 'CA-MINE',
+      description: 'Depreciation',
+      currency: 'PGK',
+      tenantId: tenant.id
     }
   });
 
-  const constructionLtd = await prisma.customer.upsert({
-    where: { customerNumber: 'CUST-002' },
+  // Create address books for customers (using correct field names from schema)
+  const customer1 = await prisma.addressBook.upsert({
+    where: { id: 'customer-1' },
     update: {},
     create: {
-      customerNumber: 'CUST-002',
-      addressBookId: constructionLtdAddress.id,
-      customerType: 'COMPANY',
-      industry: 'Construction',
-      creditLimit: 500000000, // 500 million IDR
-      currentBalance: 0,
-      status: 'ACTIVE'
+      id: 'customer-1',
+      alphaName: 'Mining Corporation Ltd',
+      isCustomer: true,
+      isVendor: false,
+      isEmployee: false,
+      tenantId: tenant.id
     }
   });
 
-  // ========================================
-  // HRMS SEEDING
-  // ========================================
-
-  // Create Employees
-  console.log('Creating employees...');
-  const hrManager = await prisma.employee.upsert({
-    where: { employeeNumber: 'EMP-001' },
+  const customer2 = await prisma.addressBook.upsert({
+    where: { id: 'customer-2' },
     update: {},
     create: {
-      employeeNumber: 'EMP-001',
-      addressBookId: hrManagerAddress.id,
-      userId: adminUser.id,
-      firstName: 'Jane',
-      lastName: 'Doe',
-      email: 'jane.doe@nextgen.com',
-      phone: '+67512345678',
-      position: 'HR Manager',
-      hireDate: new Date('2024-01-01'),
-      employmentStatus: 'ACTIVE',
-      baseSalary: 25000000, // 25 million IDR per month
-      allowances: 5000000 // 5 million IDR per month
+      id: 'customer-2',
+      alphaName: 'Construction Limited',
+      isCustomer: true,
+      isVendor: false,
+      isEmployee: false,
+      tenantId: tenant.id
     }
   });
 
-  console.log('✅ ERP database seeding completed successfully!');
-  console.log('📊 Summary of created data:');
-  console.log(`   - Roles: 3`);
-  console.log(`   - Users: 1`);
-  console.log(`   - AddressBook: 5`);
-  console.log(`   - Products: 5`);
-  console.log(`   - Suppliers: 2`);
-  console.log(`   - Equipment: 2`);
-  console.log(`   - Chart Accounts: 9`);
-  console.log(`   - Customers: 2`);
-  console.log(`   - Employees: 1`);
+  // Create employees (using correct field names from schema)
+  const employee1 = await prisma.employee.upsert({
+    where: { id: 'employee-1' },
+    update: {},
+    create: {
+      id: 'employee-1',
+      abId: customer1.id, // Reference to AddressBook
+      tenantId: tenant.id
+    }
+  });
+
+  console.log('✅ Database seeding completed successfully!');
+  console.log(`Created tenant: ${tenant.name}`);
+  console.log(`Created roles: ${adminRole.name}, ${managerRole.name}, ${operatorRole.name}`);
+  console.log(`Created users: ${adminUser.email}`);
+  console.log(`Created items: ${excavator.number}, ${bulldozer.number}`);
+  console.log(`Created equipment: ${excavatorEquipment.code}, ${bulldozerEquipment.code}`);
 }
 
 main()
@@ -502,6 +376,6 @@ main()
     console.error('❌ Error during seeding:', e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    void prisma.$disconnect();
   }); 

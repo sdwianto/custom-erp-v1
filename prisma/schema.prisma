@@ -8,413 +8,531 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id                    String                 @id @default(uuid())
-  email                 String                 @unique
-  firstName             String
-  lastName              String
-  phone                 String?
-  isActive              Boolean                @default(true)
-  lastLoginAt           DateTime?
-  tenantId              String                 @default("default")
-  roleId                String
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  version               Int                    @default(1)
-  isDeleted             Boolean                @default(false)
-  auditLogs             AuditLog[]
-  breakdowns            Breakdown[]
-  employees             Employee[]
-  glEntries             GLEntry[]
-  inventoryTransactions InventoryTransaction[]
-  usageLogs             UsageLog[]
-  role                  Role                   @relation(fields: [roleId], references: [id])
+model Tenant {
+  id                   String                @id @default(cuid())
+  name                 String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  version              Int                   @default(1)
+  isDeleted            Boolean               @default(false)
+  createdBy            String?
+  updatedBy            String?
+  isActive             Boolean               @default(true)
+  apInvoices           APInvoice[]
+  arInvoices           ARInvoice[]
+  addressBooks         AddressBook[]
+  breakdowns           Breakdown[]
+  chartAccounts        ChartAccount[]
+  employees            Employee[]
+  equipment            Equipment[]
+  glEntries            GLEntry[]
+  grns                 GRN[]
+  items                Item[]
+  purchaseOrders       PurchaseOrder[]
+  purchaseRequisitions PurchaseRequisition[]
+  roles                Role[]
+  tickets              Ticket[]
+  usageLogs            UsageLog[]
+  users                User[]
+  userRoles            UserRole[]
+  workOrders           WorkOrder[]
+}
 
-  @@index([tenantId])
-  @@index([email])
-  @@index([isActive])
+model User {
+  id        String   @id @default(cuid())
+  email     String
+  tenantId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  version   Int      @default(1)
+  isDeleted Boolean  @default(false)
+  createdBy String?
+  updatedBy String?
+  name      String?
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  // Relations
+  userRoles UserRole[]
+
+  @@index([tenantId, isDeleted], map: "idx_user_tenant_active")
+  @@index([tenantId, email], map: "idx_user_tenant_email")
 }
 
 model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String?
-  permissions Json
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  users       User[]
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenantId  String
+  version   Int      @default(1)
+  isDeleted Boolean  @default(false)
+  createdBy String?
+  updatedBy String?
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  // Relations
+  userRoles UserRole[]
+
+  @@index([tenantId, name], map: "idx_role_tenant_name")
 }
 
-model AuditLog {
-  id         String   @id @default(uuid())
-  tenantId   String   @default("default")
-  userId     String
-  action     String
-  entityType String
-  entityId   String?
-  oldValues  Json?
-  newValues  Json?
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
+model Permission {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  version   Int      @default(1)
+  isDeleted Boolean  @default(false)
+  createdBy String?
+  updatedBy String?
+  tenantId  String
 
-  @@index([tenantId])
-  @@index([entityType, entityId])
-  @@index([createdAt])
+  @@index([tenantId, code], map: "idx_permission_tenant_code")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  roleId    String
+  version   Int      @default(1)
+  isDeleted Boolean  @default(false)
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  role      Role     @relation(fields: [roleId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, userId], map: "idx_userrole_tenant_user")
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  tenantId  String
+  actorId   String?
+  entity    String
+  entityId  String
+  action    String
+  changes   Json?
+  version   Int      @default(1)
+  isDeleted Boolean  @default(false)
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  hash      String
+
+  @@index([actorId], map: "idx_auditevent_actor")
+  @@index([tenantId, createdAt], map: "idx_auditevent_tenant_created")
+  @@index([tenantId, entity, entityId], map: "idx_auditevent_tenant_entity")
 }
 
 model AddressBook {
-  id           String     @id @default(uuid())
-  tenantId     String     @default("default")
-  alphaName    String
-  isCustomer   Boolean    @default(false)
-  isVendor     Boolean    @default(false)
-  isEmployee   Boolean    @default(false)
-  altKey       String?
-  addressLine1 String?
-  city         String?
-  state        String?
-  postalCode   String?
-  country      String?    @default("Indonesia")
-  phone        String?
-  email        String?
-  taxNumber    String?
+  id         String     @id @default(cuid())
+  tenantId   String
+  alphaName  String
+  isCustomer Boolean    @default(false)
+  isVendor   Boolean    @default(false)
+  isEmployee Boolean    @default(false)
+  altKey     String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  version    Int        @default(1)
+  isDeleted  Boolean    @default(false)
+  createdBy  String?
+  updatedBy  String?
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  employees  Employee[]
+
+  @@index([tenantId, alphaName], map: "idx_addressbook_tenant_alpha")
+  @@index([tenantId, isCustomer, isVendor, isEmployee], map: "idx_addressbook_tenant_types")
+}
+
+model Item {
+  id          String       @id @default(cuid())
+  tenantId    String
+  number      String       @unique
+  description String
+  type        String
+  stdCost     Decimal      @default(0)
+  lastCost    Decimal      @default(0)
+  avgCost     Decimal      @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  version     Int          @default(1)
+  isDeleted   Boolean      @default(false)
+  createdBy   String?
+  updatedBy   String?
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  branches    ItemBranch[]
+
+  @@index([tenantId, isDeleted], map: "idx_item_tenant_active")
+  @@index([tenantId, type], map: "idx_item_tenant_type")
+}
+
+model ItemBranch {
+  id           String         @id @default(cuid())
+  itemId       String
+  siteId       String
+  reorderPoint Int            @default(0)
+  reorderQty   Int            @default(0)
+  safetyStock  Int            @default(0)
+  leadTimeDays Int            @default(0)
+  lotSize      Int            @default(1)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  version      Int            @default(1)
+  isDeleted    Boolean        @default(false)
+  createdBy    String?
+  updatedBy    String?
+  tenantId     String
+  item         Item           @relation(fields: [itemId], references: [id])
+  locations    ItemLocation[]
+
+  @@index([tenantId, itemId], map: "idx_itembranch_tenant_item")
+}
+
+model ItemLocation {
+  id           String     @id @default(cuid())
+  itemBranchId String
+  bin          String
+  lotNumber    String?
+  qtyOnHand    Int        @default(0)
+  qtyCommitted Int        @default(0)
+  qtyOnOrder   Int        @default(0)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   version      Int        @default(1)
   isDeleted    Boolean    @default(false)
-  customers    Customer[]
-  employees    Employee[]
-  suppliers    Supplier[]
+  createdBy    String?
+  updatedBy    String?
+  tenantId     String
+  itemBranch   ItemBranch @relation(fields: [itemBranchId], references: [id])
 
-  @@index([tenantId])
-  @@index([alphaName])
-  @@index([isCustomer, isVendor, isEmployee])
+  @@index([tenantId, itemBranchId], map: "idx_itemlocation_tenant_branch")
 }
 
-model Product {
-  id                    String                 @id @default(uuid())
-  tenantId              String                 @default("default")
-  name                  String
-  code                  String                 @unique
-  description           String?
-  sku                   String                 @unique
-  price                 Int
-  costPrice             Int
-  minStockLevel         Int                    @default(0)
-  maxStockLevel         Int?
-  currentStock          Int                    @default(0)
-  unitOfMeasure         String                 @default("PCS")
-  reorderPoint          Int                    @default(0)
-  reorderQuantity       Int                    @default(0)
-  safetyStock           Int                    @default(0)
-  leadTimeDays          Int                    @default(0)
-  lotSize               Int                    @default(1)
-  isActive              Boolean                @default(true)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  version               Int                    @default(1)
-  isDeleted             Boolean                @default(false)
-  inventoryTransactions InventoryTransaction[]
+model InventoryTx {
+  id        String   @id @default(cuid())
+  tenantId  String
+  itemId    String
+  siteId    String
+  location  String
+  txType    String
+  qty       Int
+  unitCost  Decimal  @default(0)
+  refType   String?
+  refId     String?
+  userId    String?
+  version   Int      @default(1)
+  isDeleted Boolean  @default(false)
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([tenantId])
-  @@index([isActive])
-}
-
-model InventoryTransaction {
-  id              String                   @id @default(uuid())
-  tenantId        String                   @default("default")
-  productId       String
-  userId          String
-  transactionType InventoryTransactionType
-  quantity        Int
-  unitCost        Int                      @default(0)
-  referenceType   String?
-  referenceId     String?
-  notes           String?
-  lotNumber       String?
-  binLocation     String?
-  createdAt       DateTime                 @default(now())
-  version         Int                      @default(1)
-  product         Product                  @relation(fields: [productId], references: [id])
-  user            User                     @relation(fields: [userId], references: [id])
-
-  @@index([tenantId])
-  @@index([productId])
-  @@index([transactionType])
-  @@index([createdAt])
+  @@index([tenantId, itemId, createdAt], map: "idx_inventorytx_tenant_item_time")
+  @@index([tenantId, siteId, createdAt], map: "idx_inventorytx_tenant_site")
+  @@index([tenantId, txType, createdAt], map: "idx_inventorytx_tenant_type")
 }
 
 model Equipment {
-  id                  String          @id @default(uuid())
-  tenantId            String          @default("default")
-  name                String
-  code                String          @unique
-  model               String?
-  serialNumber        String?         @unique
-  manufacturer        String?
-  acquisitionCost     Int?
-  currentValue        Int?
-  depreciationMethod  String?
-  usefulLife          Int?
-  salvageValue        Int?
-  status              EquipmentStatus @default(AVAILABLE)
-  location            String?
-  lastMaintenanceDate DateTime?
-  nextMaintenanceDate DateTime?
-  totalOperatingHours Int             @default(0)
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  version             Int             @default(1)
-  isDeleted           Boolean         @default(false)
-  breakdowns          Breakdown[]
-  usageLogs           UsageLog[]
+  id              String      @id @default(cuid())
+  tenantId        String
+  code            String      @unique
+  acquisitionCost Decimal     @default(0)
+  currentValue    Decimal     @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  version         Int         @default(1)
+  isDeleted       Boolean     @default(false)
+  currentSiteId   String?
+  type            String
+  createdBy       String?
+  updatedBy       String?
+  breakdowns      Breakdown[]
+  tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  usageLogs       UsageLog[]
+  workOrders      WorkOrder[]
 
-  @@index([tenantId])
-  @@index([status])
-  @@index([location])
+  @@index([tenantId, isDeleted], map: "idx_equipment_tenant_active")
+  @@index([tenantId, code], map: "idx_equipment_tenant_code")
+  @@index([tenantId, currentSiteId], map: "idx_equipment_tenant_site")
+  @@index([tenantId, type], map: "idx_equipment_tenant_type")
 }
 
 model UsageLog {
-  id          String    @id @default(uuid())
-  tenantId    String    @default("default")
+  id          String    @id @default(cuid())
+  tenantId    String
   equipmentId String
-  userId      String
   shiftDate   DateTime
   hoursUsed   Decimal   @default(0)
   loadUnits   Decimal   @default(0)
-  notes       String?
   createdAt   DateTime  @default(now())
   version     Int       @default(1)
+  isDeleted   Boolean   @default(false)
+  createdBy   String?
+  updatedBy   String?
+  updatedAt   DateTime  @updatedAt
   equipment   Equipment @relation(fields: [equipmentId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
 
-  @@index([tenantId])
-  @@index([equipmentId])
-  @@index([shiftDate])
+  @@index([tenantId, equipmentId, shiftDate], map: "idx_usagelog_tenant_equipment_time")
+  @@index([tenantId, shiftDate], map: "idx_usagelog_tenant_shift")
 }
 
 model Breakdown {
-  id          String            @id @default(uuid())
-  tenantId    String            @default("default")
+  id          String    @id @default(cuid())
+  tenantId    String
   equipmentId String
-  userId      String
   startAt     DateTime
   endAt       DateTime?
   reason      String?
   notes       String?
-  severity    BreakdownSeverity @default(MINOR)
-  createdAt   DateTime          @default(now())
-  version     Int               @default(1)
-  equipment   Equipment         @relation(fields: [equipmentId], references: [id])
-  user        User              @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  version     Int       @default(1)
+  isDeleted   Boolean   @default(false)
+  createdBy   String?
+  updatedBy   String?
+  updatedAt   DateTime  @updatedAt
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
 
-  @@index([tenantId])
-  @@index([equipmentId])
-  @@index([startAt])
+  @@index([tenantId, equipmentId, startAt], map: "idx_breakdown_tenant_equipment_time")
+}
+
+model WorkOrder {
+  id            String    @id @default(cuid())
+  tenantId      String
+  equipmentId   String
+  type          String
+  status        String
+  scheduledDate DateTime?
+  estimatedCost Decimal   @default(0)
+  actualCost    Decimal   @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  createdBy     String?
+  updatedBy     String?
+  version       Int       @default(1)
+  isDeleted     Boolean   @default(false)
+  equipment     Equipment @relation(fields: [equipmentId], references: [id])
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, scheduledDate], map: "idx_workorder_tenant_scheduled")
+  @@index([tenantId, status], map: "idx_workorder_tenant_status")
+  @@index([tenantId, type], map: "idx_workorder_tenant_type")
+}
+
+model PurchaseRequisition {
+  id          String   @id @default(cuid())
+  tenantId    String
+  requesterId String
+  status      String
+  costCenter  String?
+  projectId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean  @default(false)
+  createdBy   String?
+  updatedBy   String?
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model PurchaseOrder {
+  id           String    @id @default(cuid())
+  tenantId     String
+  supplierId   String
+  status       String
+  currency     String    @default("PGK")
+  exchangeRate Decimal   @default(1)
+  deliveryDate DateTime?
+  totalAmount  Decimal   @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  version      Int       @default(1)
+  isDeleted    Boolean   @default(false)
+  createdBy    String?
+  updatedBy    String?
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status], map: "idx_purchaseorder_tenant_status")
+  @@index([tenantId, supplierId], map: "idx_purchaseorder_tenant_supplier")
+}
+
+model GRN {
+  id         String   @id @default(cuid())
+  tenantId   String
+  poId       String
+  receivedAt DateTime @default(now())
+  userId     String?
+  createdAt  DateTime @default(now())
+  version    Int      @default(1)
+  isDeleted  Boolean  @default(false)
+  createdBy  String?
+  updatedBy  String?
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, poId], map: "idx_grn_tenant_po")
+}
+
+model APInvoice {
+  id         String   @id @default(cuid())
+  tenantId   String
+  poId       String?
+  supplierId String
+  invoiceNo  String
+  amount     Decimal  @default(0)
+  currency   String   @default("PGK")
+  status     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  version    Int      @default(1)
+  isDeleted  Boolean  @default(false)
+  createdBy  String?
+  updatedBy  String?
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status], map: "idx_apinvoice_tenant_status")
+  @@index([tenantId, supplierId], map: "idx_apinvoice_tenant_supplier")
+}
+
+model ARInvoice {
+  id          String   @id @default(cuid())
+  tenantId    String
+  customerId  String
+  rentalRefId String?
+  amount      Decimal  @default(0)
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean  @default(false)
+  createdBy   String?
+  updatedBy   String?
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, customerId], map: "idx_arinvoice_tenant_customer")
+  @@index([tenantId, status], map: "idx_arinvoice_tenant_status")
 }
 
 model ChartAccount {
-  id              String         @id @default(uuid())
-  tenantId        String         @default("default")
-  accountNumber   String         @unique
-  name            String
-  type            AccountType
-  parentAccountId String?
-  company         String         @default("default")
-  businessUnit    String         @default("default")
-  object          String         @default("default")
-  subsidiary      String         @default("default")
-  project         String?
-  balance         Int            @default(0)
-  isActive        Boolean        @default(true)
-  currency        String         @default("IDR")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  version         Int            @default(1)
-  parentAccount   ChartAccount?  @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
-  childAccounts   ChartAccount[] @relation("AccountHierarchy")
-  glEntries       GLEntry[]
+  id           String    @id @default(cuid())
+  tenantId     String
+  company      String
+  businessUnit String
+  object       String
+  subsidiary   String
+  project      String?
+  currency     String    @default("PGK")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  description  String
+  createdBy    String?
+  updatedBy    String?
+  version      Int       @default(1)
+  isDeleted    Boolean   @default(false)
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  glEntries    GLEntry[]
 
-  @@index([tenantId])
-  @@index([accountNumber])
-  @@index([type])
-  @@index([company, businessUnit, object, subsidiary])
+  @@index([tenantId, company, businessUnit, object], map: "idx_chartaccount_tenant_dimensions")
 }
 
 model GLEntry {
-  id            String       @id @default(uuid())
-  tenantId      String       @default("default")
-  accountId     String
-  amount        Int
-  currency      String       @default("IDR")
-  exchangeRate  Decimal      @default(1)
-  batchNo       String
-  batchType     String
-  journalEntry  String?
-  description   String?
-  referenceType String?
-  referenceId   String?
-  userId        String?
-  createdAt     DateTime     @default(now())
-  version       Int          @default(1)
-  account       ChartAccount @relation(fields: [accountId], references: [id])
-  user          User?        @relation(fields: [userId], references: [id])
+  id           String       @id @default(cuid())
+  tenantId     String
+  accountId    String
+  amount       Decimal
+  currency     String       @default("PGK")
+  exchangeRate Decimal      @default(1)
+  batchNo      String
+  batchType    String
+  createdAt    DateTime     @default(now())
+  createdBy    String?
+  updatedBy    String?
+  version      Int          @default(1)
+  isDeleted    Boolean      @default(false)
+  updatedAt    DateTime     @updatedAt
+  account      ChartAccount @relation(fields: [accountId], references: [id])
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
 
-  @@index([tenantId])
-  @@index([accountId])
-  @@index([batchNo])
-  @@index([createdAt])
-}
-
-model IdempotencyLog {
-  id          String   @id @default(uuid())
-  tenantId    String   @default("default")
-  userId      String
-  key         String
-  hash        String
-  result      Json?
-  committedAt DateTime @default(now())
-
-  @@unique([tenantId, userId, key])
-  @@index([tenantId])
-  @@index([committedAt])
-}
-
-model EventOutbox {
-  id        String   @id @default(uuid())
-  tenantId  String   @default("default")
-  type      String
-  entity    String
-  entityId  String
-  version   Int
-  payload   Json
-  createdAt DateTime @default(now())
-  delivered Boolean  @default(false)
-
-  @@index([tenantId])
-  @@index([delivered])
-  @@index([createdAt])
-}
-
-model Customer {
-  id             String         @id @default(uuid())
-  tenantId       String         @default("default")
-  addressBookId  String
-  customerNumber String         @unique
-  customerType   CustomerType   @default(INDIVIDUAL)
-  industry       String?
-  creditLimit    Int            @default(0)
-  currentBalance Int            @default(0)
-  status         CustomerStatus @default(ACTIVE)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  version        Int            @default(1)
-  addressBook    AddressBook    @relation(fields: [addressBookId], references: [id])
-
-  @@index([tenantId])
-  @@index([addressBookId])
-  @@index([status])
-}
-
-model Supplier {
-  id                 String      @id @default(uuid())
-  tenantId           String      @default("default")
-  addressBookId      String
-  supplierCode       String      @unique
-  paymentTerms       String?
-  creditLimit        Int?
-  currentBalance     Int         @default(0)
-  onTimeDeliveryRate Decimal?    @default(0)
-  qualityRating      Decimal?    @default(0)
-  isActive           Boolean     @default(true)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
-  version            Int         @default(1)
-  addressBook        AddressBook @relation(fields: [addressBookId], references: [id])
-
-  @@index([tenantId])
-  @@index([addressBookId])
-  @@index([isActive])
+  @@index([tenantId, accountId, createdAt], map: "idx_glentry_tenant_account_time")
+  @@index([tenantId, batchNo, batchType], map: "idx_glentry_tenant_batch")
+  @@index([tenantId, createdAt], map: "idx_glentry_tenant_posting")
 }
 
 model Employee {
-  id               String           @id @default(uuid())
-  tenantId         String           @default("default")
-  addressBookId    String
-  employeeNumber   String           @unique
-  userId           String
-  firstName        String
-  lastName         String
-  email            String           @unique
-  phone            String?
-  position         String
-  hireDate         DateTime
-  employmentStatus EmploymentStatus @default(ACTIVE)
-  baseSalary       Int
-  allowances       Int              @default(0)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  version          Int              @default(1)
-  addressBook      AddressBook      @relation(fields: [addressBookId], references: [id])
-  user             User             @relation(fields: [userId], references: [id])
+  id          String      @id @default(cuid())
+  tenantId    String
+  hireDate    DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  abId        String
+  orgUnitId   String?
+  version     Int         @default(1)
+  isDeleted   Boolean     @default(false)
+  createdBy   String?
+  updatedBy   String?
+  addressBook AddressBook @relation(fields: [abId], references: [id])
+  tenant      Tenant      @relation(fields: [tenantId], references: [id])
 
-  @@index([tenantId])
-  @@index([addressBookId])
-  @@index([employmentStatus])
+  @@index([tenantId, hireDate], map: "idx_employee_tenant_hire")
 }
 
-enum InventoryTransactionType {
-  IN
-  OUT
-  ADJUSTMENT
-  TRANSFER
-  GRN
-  GI
+model Leave {
+  id         String   @id @default(cuid())
+  employeeId String
+  type       String
+  startDate  DateTime
+  endDate    DateTime
+  status     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  version    Int      @default(1)
+  isDeleted  Boolean  @default(false)
+  createdBy  String?
+  updatedBy  String?
+  tenantId   String
+
+  @@index([tenantId, employeeId], map: "idx_leave_tenant_employee")
 }
 
-enum EquipmentStatus {
-  AVAILABLE
-  IN_USE
-  MAINTENANCE
-  REPAIR
-  RETIRED
-  LOST
+model Timesheet {
+  id          String   @id @default(cuid())
+  employeeId  String
+  shiftDate   DateTime
+  hoursWorked Decimal  @default(0)
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean  @default(false)
+  createdBy   String?
+  updatedBy   String?
+  tenantId    String
+
+  @@index([tenantId, employeeId], map: "idx_timesheet_tenant_employee")
 }
 
-enum BreakdownSeverity {
-  MINOR
-  MODERATE
-  MAJOR
-  CRITICAL
-}
+model Ticket {
+  id         String   @id @default(cuid())
+  tenantId   String
+  customerId String
+  type       String
+  status     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  version    Int      @default(1)
+  isDeleted  Boolean  @default(false)
+  createdBy  String?
+  updatedBy  String?
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
 
-enum AccountType {
-  ASSET
-  LIABILITY
-  EQUITY
-  REVENUE
-  EXPENSE
-}
-
-enum CustomerType {
-  INDIVIDUAL
-  COMPANY
-  GOVERNMENT
-}
-
-enum CustomerStatus {
-  ACTIVE
-  INACTIVE
-  PROSPECT
-  LEAD
-}
-
-enum EmploymentStatus {
-  ACTIVE
-  INACTIVE
-  TERMINATED
-  ON_LEAVE
+  @@index([tenantId, customerId], map: "idx_ticket_tenant_customer")
 }

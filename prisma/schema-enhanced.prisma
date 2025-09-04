@@ -1,0 +1,678 @@
+// Enhanced Enterprise-Grade Prisma Schema
+// Based on JDE Knowledge Recommendations & Implementation Guide
+// Phase 1: Database Foundation & Optimization
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==================== CORE & SECURITY ====================
+
+model User {
+  id                    String                 @id @default(uuid())
+  email                 String                 @unique
+  firstName             String
+  lastName              String
+  phone                 String?
+  isActive              Boolean                @default(true)
+  lastLoginAt           DateTime?
+  tenantId              String                 @default("default")
+  roleId                String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  version               Int                    @default(1)
+  isDeleted             Boolean                @default(false)
+  
+  // Audit fields
+  createdBy             String?
+  updatedBy             String?
+  
+  // Relations
+  auditLogs             AuditLog[]
+  breakdowns            Breakdown[]
+  employees             Employee[]
+  glEntries             GLEntry[]
+  inventoryTransactions InventoryTransaction[]
+  usageLogs             UsageLog[]
+  role                  Role                   @relation(fields: [roleId], references: [id])
+
+  @@index([tenantId])
+  @@index([email])
+  @@index([isActive])
+  @@index([tenantId, isActive])
+  @@index([tenantId, roleId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  permissions Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean  @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  users       User[]
+
+  @@index([isActive])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  module      String
+  action      String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean  @default(false)
+
+  @@index([code])
+  @@index([module, action])
+}
+
+// Enhanced Audit System (JDE F9312 equivalent)
+model AuditLog {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("default")
+  userId      String
+  action      String
+  entityType  String
+  entityId    String?
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  // Enhanced audit fields
+  correlationId String?
+  sessionId     String?
+  requestId     String?
+  changes       Json? // Detailed change tracking
+  
+  // Tamper evidence
+  hash          String
+  
+  user          User   @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([tenantId, entityType, entityId])
+  @@index([tenantId, createdAt])
+  @@index([correlationId])
+}
+
+// ==================== ADDRESS BOOK (JDE F0101 equivalent) ====================
+
+model AddressBook {
+  id           String     @id @default(uuid())
+  tenantId     String     @default("default")
+  alphaName    String
+  isCustomer   Boolean    @default(false)
+  isVendor     Boolean    @default(false)
+  isEmployee   Boolean    @default(false)
+  altKey       String?    // Alternate address key
+  
+  // Enhanced address fields
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?    @default("Indonesia")
+  phone        String?
+  email        String?
+  taxNumber    String?
+  
+  // Enterprise fields
+  personCorporationCode String? // P/C indicator
+  addressType1         String? // Address type
+  addressType2         String? // Secondary address type
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  version     Int        @default(1)
+  isDeleted   Boolean    @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  // Relations
+  customers   Customer[]
+  employees   Employee[]
+  suppliers   Supplier[]
+
+  @@index([tenantId])
+  @@index([alphaName])
+  @@index([isCustomer, isVendor, isEmployee])
+  @@index([tenantId, alphaName])
+  @@index([tenantId, isCustomer, isVendor, isEmployee])
+}
+
+// ==================== INVENTORY (JDE F4101/F4102/F41021/F4111) ====================
+
+model Item {
+  id           String   @id @default(uuid())
+  tenantId     String   @default("default")
+  number       String   @unique // Item number (JDE style)
+  description  String
+  type         String
+  
+  // Cost tracking (JDE style)
+  stdCost      Decimal  @db.Decimal(14,2) @default(0)
+  lastCost     Decimal  @db.Decimal(14,2) @default(0)
+  avgCost      Decimal  @db.Decimal(14,2) @default(0)
+  
+  // Enhanced fields
+  categoryCode String?
+  itemGroup    String?
+  unitOfMeasure String  @default("PCS")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  // Relations
+  branches    ItemBranch[]
+  transactions InventoryTransaction[]
+
+  @@index([tenantId])
+  @@index([number])
+  @@index([tenantId, number])
+  @@index([tenantId, type])
+  @@index([tenantId, categoryCode])
+}
+
+model ItemBranch {
+  id           String   @id @default(uuid())
+  itemId       String
+  siteId       String
+  branch       String
+  
+  // Planning parameters (JDE F4102 equivalent)
+  reorderPoint Int      @default(0)
+  reorderQty   Int      @default(0)
+  safetyStock  Int      @default(0)
+  leadTimeDays Int      @default(0)
+  lotSize      Int      @default(1)
+  
+  // Performance tracking
+  turnoverRate Decimal? @db.Decimal(5,2)
+  fillRate     Decimal? @db.Decimal(5,2)
+  
+  // Cost center
+  costCenter   String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  item         Item     @relation(fields: [itemId], references: [id])
+  locations    ItemLocation[]
+
+  @@index([itemId])
+  @@index([siteId])
+  @@index([itemId, siteId])
+  @@index([costCenter])
+}
+
+model ItemLocation {
+  id          String   @id @default(uuid())
+  itemBranchId String
+  location    String
+  bin         String?
+  
+  // Stock levels (JDE F41021 equivalent)
+  qtyOnHand   Int      @default(0)
+  qtyCommitted Int     @default(0)
+  qtyOnOrder  Int      @default(0)
+  qtyAvailable Int     @default(0)
+  
+  // Lot tracking
+  lotNumber   String?
+  expirationDate DateTime?
+  
+  // Location details
+  locationType String? // Storage, Production, etc.
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  itemBranch  ItemBranch @relation(fields: [itemBranchId], references: [id])
+
+  @@index([itemBranchId])
+  @@index([location])
+  @@index([itemBranchId, location])
+  @@index([lotNumber])
+}
+
+model InventoryTransaction {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("default")
+  itemId      String
+  siteId      String
+  location    String
+  txType      String   // GRN|GI|ADJ|MOVE|TRANSFER
+  
+  // Transaction details
+  qty         Int
+  unitCost    Decimal  @db.Decimal(14,2) @default(0)
+  totalCost   Decimal  @db.Decimal(14,2) @default(0)
+  
+  // Reference tracking
+  refType     String?
+  refId       String?
+  userId      String?
+  
+  // Enhanced fields
+  lotNumber   String?
+  binLocation String?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  
+  item        Item     @relation(fields: [itemId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([itemId])
+  @@index([tenantId, itemId])
+  @@index([tenantId, txType])
+  @@index([tenantId, createdAt])
+  @@index([refType, refId])
+  @@index([tenantId, siteId, location])
+}
+
+// ==================== EQUIPMENT & OPERATIONS (JDE F1201/F4801) ====================
+
+model Equipment {
+  id            String   @id @default(uuid())
+  tenantId      String   @default("default")
+  code          String   @unique
+  name          String
+  type          String
+  model         String?
+  serialNumber  String?  @unique
+  
+  // Specifications
+  manufacturer  String?
+  specifications Json?
+  
+  // Location tracking
+  currentSiteId String?
+  currentLocation String?
+  
+  // Financial tracking
+  acquisitionCost Decimal @db.Decimal(14,2) @default(0)
+  currentValue     Decimal @db.Decimal(14,2) @default(0)
+  depreciationMethod String?
+  usefulLife        Int?
+  salvageValue      Decimal @db.Decimal(14,2) @default(0)
+  
+  // Status & maintenance
+  status              EquipmentStatus @default(AVAILABLE)
+  lastMaintenanceDate DateTime?
+  nextMaintenanceDate DateTime?
+  totalOperatingHours Int             @default(0)
+  
+  // Performance metrics
+  utilizationRate     Decimal? @db.Decimal(5,2)
+  availabilityRate    Decimal? @db.Decimal(5,2)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  breakdowns  Breakdown[]
+  usageLogs   UsageLog[]
+  workOrders  WorkOrder[]
+
+  @@index([tenantId])
+  @@index([code])
+  @@index([tenantId, code])
+  @@index([tenantId, status])
+  @@index([tenantId, currentSiteId])
+  @@index([tenantId, type])
+}
+
+model UsageLog {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("default")
+  equipmentId String
+  userId      String
+  shiftDate   DateTime
+  
+  // Usage metrics
+  hoursUsed   Decimal  @db.Decimal(8,2) @default(0)
+  loadUnits   Decimal  @db.Decimal(8,2) @default(0)
+  
+  // Enhanced fields
+  shiftType   String?  // Day/Night shift
+  operatorId  String?
+  notes       String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([equipmentId])
+  @@index([tenantId, equipmentId])
+  @@index([tenantId, shiftDate])
+  @@index([tenantId, equipmentId, shiftDate])
+}
+
+model Breakdown {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("default")
+  equipmentId String
+  userId      String
+  startAt     DateTime
+  endAt       DateTime?
+  
+  // Breakdown details
+  reason      String?
+  notes       String?
+  severity    BreakdownSeverity @default(MINOR)
+  
+  // Impact tracking
+  downtimeHours Decimal? @db.Decimal(8,2)
+  repairCost    Decimal? @db.Decimal(14,2)
+  
+  // Root cause analysis
+  rootCause    String?
+  preventiveMeasures String[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([equipmentId])
+  @@index([tenantId, equipmentId])
+  @@index([tenantId, startAt])
+  @@index([tenantId, severity])
+}
+
+model WorkOrder {
+  id            String   @id @default(uuid())
+  tenantId      String   @default("default")
+  equipmentId   String
+  type          String   // preventive|corrective|emergency
+  
+  // Work order details
+  status        String   // planned|released|in_progress|completed|canceled
+  priority      Int      @default(1)
+  scheduledDate DateTime?
+  
+  // Cost tracking
+  estimatedCost Decimal  @db.Decimal(14,2) @default(0)
+  actualCost    Decimal  @db.Decimal(14,2) @default(0)
+  
+  // Resource allocation
+  assignedTechnicians String[]
+  requiredParts       String[]
+  
+  // Performance tracking
+  downtimeHours Decimal? @db.Decimal(8,2)
+  repairTime    Decimal? @db.Decimal(8,2)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)
+  isDeleted   Boolean @default(false)
+  
+  // Audit fields
+  createdBy   String?
+  updatedBy   String?
+  
+  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+
+  @@index([tenantId])
+  @@index([equipmentId])
+  @@index([tenantId, equipmentId])
+  @@index([tenantId, status])
+  @@index([tenantId, type])
+  @@index([tenantId, scheduledDate])
+}
+
+// ==================== FINANCIAL (JDE F0901/F0911 equivalent) ====================
+
+model ChartAccount {
+  id              String       @id @default(uuid())
+  tenantId        String       @default("default")
+  accountNumber   String       @unique
+  name            String
+  type            AccountType
+  parentAccountId String?
+  
+  // Multi-dimensional support (JDE style)
+  company         String       @default("default")
+  businessUnit    String       @default("default")
+  object          String       @default("default")
+  subsidiary      String       @default("default")
+  project         String?
+  
+  // Account hierarchy
+  accountLevel    Int          @default(1)
+  
+  // Financial settings
+  balance         Decimal      @db.Decimal(14,2) @default(0)
+  isActive        Boolean      @default(true)
+  currency        String       @default("IDR")
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  version         Int          @default(1)
+  isDeleted       Boolean      @default(false)
+  
+  // Audit fields
+  createdBy       String?
+  updatedBy       String?
+  
+  parentAccount   ChartAccount?  @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
+  childAccounts   ChartAccount[] @relation("AccountHierarchy")
+  glEntries       GLEntry[]
+
+  @@index([tenantId])
+  @@index([accountNumber])
+  @@index([tenantId, accountNumber])
+  @@index([tenantId, type])
+  @@index([company, businessUnit, object, subsidiary])
+  @@index([tenantId, parentAccountId])
+}
+
+model GLEntry {
+  id            String       @id @default(uuid())
+  tenantId      String       @default("default")
+  accountId     String
+  
+  // Financial details
+  amount        Decimal      @db.Decimal(14,2)
+  currency      String       @default("IDR")
+  exchangeRate  Decimal      @db.Decimal(8,4) @default(1)
+  
+  // Batch processing
+  batchNo       String
+  batchType     String
+  journalEntry  String?
+  
+  // Reference tracking
+  description   String?
+  referenceType String?
+  referenceId   String?
+  userId        String?
+  
+  // Enhanced fields
+  postingDate   DateTime     @default(now())
+  effectiveDate DateTime     @default(now())
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  version       Int          @default(1)
+  isDeleted     Boolean      @default(false)
+  
+  // Audit fields
+  createdBy     String?
+  updatedBy     String?
+  
+  account       ChartAccount @relation(fields: [accountId], references: [id])
+  user          User?        @relation(fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([tenantId, accountId])
+  @@index([tenantId, batchNo])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, postingDate])
+  @@index([referenceType, referenceId])
+}
+
+// ==================== OFFLINE & SYNC INFRASTRUCTURE ====================
+
+model IdempotencyLog {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("default")
+  userId      String
+  key         String
+  hash        String
+  result      Json?
+  committedAt DateTime @default(now())
+  
+  // Enhanced fields
+  operation   String   // Operation type
+  status      String   // success|failed|pending
+  retryCount  Int      @default(0)
+  maxRetries  Int      @default(3)
+
+  @@unique([tenantId, userId, key])
+  @@index([tenantId])
+  @@index([tenantId, userId])
+  @@index([committedAt])
+  @@index([tenantId, status])
+}
+
+model EventOutbox {
+  id        String   @id @default(uuid())
+  tenantId  String   @default("default")
+  type      String
+  entity    String
+  entityId  String
+  version   Int
+  payload   Json
+  createdAt DateTime @default(now())
+  delivered Boolean  @default(false)
+  
+  // Enhanced fields
+  priority      Int      @default(1)
+  retryCount   Int      @default(0)
+  maxRetries   Int      @default(3)
+  nextRetryAt  DateTime?
+  errorMessage String?
+
+  @@index([tenantId])
+  @@index([delivered])
+  @@index([tenantId, delivered])
+  @@index([createdAt])
+  @@index([tenantId, type])
+  @@index([tenantId, priority])
+}
+
+// ==================== ENUMS ====================
+
+enum EquipmentStatus {
+  AVAILABLE
+  IN_USE
+  MAINTENANCE
+  REPAIR
+  RETIRED
+  LOST
+}
+
+enum BreakdownSeverity {
+  MINOR
+  MODERATE
+  MAJOR
+  CRITICAL
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  COMPANY
+  GOVERNMENT
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+  LEAD
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+  ON_LEAVE
+}
+

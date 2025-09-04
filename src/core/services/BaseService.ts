@@ -1,236 +1,214 @@
-import { type PrismaClient } from '@prisma/client';
-import { eventBus, type DomainEvent } from '../events/EventBus';
-import { redis } from '../cache/redis';
+import { PrismaClient } from '@prisma/client';
+import { Redis } from 'ioredis';
+import { Logger } from './Logger';
 
-// Base service interface
-export interface BaseServiceInterface {
-  tenantId: string;
-  userId: string;
-}
+/**
+ * Base Service Class - Enterprise-grade foundation for all business services
+ * Follows JDE patterns and Implementation Guide requirements
+ */
+export abstract class BaseService<T> {
+  protected readonly prisma: PrismaClient;
+  protected readonly redis: Redis;
+  protected readonly logger: Logger;
+  protected readonly tenantId: string;
 
-// Idempotency result
-export interface IdempotencyResult<T> {
-  isDuplicate: boolean;
-  result?: T;
-  error?: string;
-}
-
-// Audit log entry
-export interface AuditLogEntry {
-  tenantId: string;
-  userId: string;
-  entityType: string;
-  entityId: string;
-  action: string;
-  changes?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
-}
-
-// Base service class
-export abstract class BaseService implements BaseServiceInterface {
-  protected prisma: PrismaClient;
-  public tenantId: string;
-  public userId: string;
-
-  constructor(prisma: PrismaClient, tenantId: string, userId: string) {
+  constructor(
+    prisma: PrismaClient,
+    redis: Redis,
+    logger: Logger,
+    tenantId: string
+  ) {
     this.prisma = prisma;
+    this.redis = redis;
+    this.logger = logger;
     this.tenantId = tenantId;
-    this.userId = userId;
   }
 
-  // Ensure idempotency for operations
-  protected async ensureIdempotency<T>(
-    operationKey: string,
-    operation: () => Promise<T>
-  ): Promise<IdempotencyResult<T>> {
-    const idempotencyKey = `${this.tenantId}:${this.userId}:${operationKey}`;
+  /**
+   * Execute optimized database queries with performance tracking
+   * Implementation Guide: Performance targets p95 ≤ 100ms
+   */
+  protected async executeQuery<T>(
+    query: string,
+    params: unknown[],
+    operation: string
+  ): Promise<T[]> {
+    const startTime = Date.now();
+    const correlationId = this.generateCorrelationId();
     
     try {
-      // Check if operation was already executed
-      const existingResult = await redis.get(idempotencyKey);
-      if (existingResult) {
-        return {
-          isDuplicate: true,
-          result: JSON.parse(existingResult)
-        };
+      this.logger.info(`Executing query: ${operation}`, {
+        correlationId,
+        tenantId: this.tenantId,
+        query: query.substring(0, 100) + '...',
+        params: params.length
+      });
+
+      const result = await this.prisma.$queryRawUnsafe<T[]>(query, ...params);
+      
+      const executionTime = Date.now() - startTime;
+      this.recordQueryLatency(operation, executionTime);
+      
+      if (executionTime > 100) {
+        this.logger.warn(`Slow query detected: ${operation}`, {
+          correlationId,
+          executionTime,
+          threshold: 100
+        });
       }
 
-      // Execute operation
-      const result = await operation();
-      
-      // Store result for idempotency (with TTL)
-      await redis.setex(idempotencyKey, 3600, JSON.stringify(result)); // 1 hour TTL
-      
-      return {
-        isDuplicate: false,
-        result
-      };
+      return result;
     } catch (error) {
-      console.error('Idempotency check failed:', error);
-      return {
-        isDuplicate: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
-    }
-  }
-
-  // Create audit log entry
-  protected async auditLog(entry: Omit<AuditLogEntry, 'tenantId' | 'userId'>): Promise<void> {
-    try {
-      const auditEntry: AuditLogEntry = {
-        ...entry,
+      const executionTime = Date.now() - startTime;
+      this.logger.error(`Query execution failed: ${operation}`, {
+        correlationId,
         tenantId: this.tenantId,
-        userId: this.userId
-      };
-
-      // Store in database
-      const createdAuditLog = await this.prisma.auditLog.create({
-        data: {
-          id: this.generateId(),
-          tenantId: auditEntry.tenantId,
-          userId: auditEntry.userId,
-          entityType: auditEntry.entityType,
-          entityId: auditEntry.entityId,
-          action: auditEntry.action,
-          oldValues: auditEntry.changes ? auditEntry.changes.old as any : undefined,
-          newValues: auditEntry.changes ? auditEntry.changes.new as any : undefined,
-          ipAddress: null, // Will be set by middleware
-          userAgent: null, // Will be set by middleware
-          createdAt: new Date()
-        }
+        error: error instanceof Error ? error.message : String(error),
+        executionTime
       });
-
-      // Publish audit event
-      await this.publishEvent('audit.log.created', 'AuditLog', createdAuditLog.id, {
-        ...auditEntry,
-        timestamp: new Date()
-      });
-
-    } catch (error) {
-      console.error('Failed to create audit log:', error);
-      // Don't throw error for audit logging failures
+      throw error;
     }
   }
 
-  // Publish domain event
-  protected async publishEvent(
-    eventType: string,
-    entity: string,
-    entityId: string,
-    payload: Record<string, unknown> = {},
-    metadata?: Record<string, unknown>
+  /**
+   * Batch processing for high-volume operations
+   * Implementation Guide: Handle 1M+ records per table
+   */
+  protected async batchProcess<T>(
+    items: T[],
+    processor: (batch: T[]) => Promise<void>,
+    batchSize = 1000
   ): Promise<void> {
+    const totalBatches = Math.ceil(items.length / batchSize);
+    this.logger.info(`Starting batch processing`, {
+      tenantId: this.tenantId,
+      totalItems: items.length,
+      batchSize,
+      totalBatches
+    });
+
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const batchNumber = Math.floor(i / batchSize) + 1;
+      
+      try {
+        await processor(batch);
+        this.logger.debug(`Batch ${batchNumber}/${totalBatches} completed`, {
+          tenantId: this.tenantId,
+          batchSize: batch.length
+        });
+      } catch (error) {
+        this.logger.error(`Batch ${batchNumber}/${totalBatches} failed`, {
+          tenantId: this.tenantId,
+          batchSize: batch.length,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Caching strategy with Redis
+   * Implementation Guide: Cache hit rate > 80%
+   */
+  protected async getCachedOrFetch<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+    ttl = 3600
+  ): Promise<T> {
+    const cacheKey = `tenant:${this.tenantId}:${key}`;
+    
     try {
-      const event: DomainEvent = {
-        id: this.generateId(),
+      const cached = await this.redis.get(cacheKey);
+      if (cached) {
+        this.logger.debug(`Cache hit for key: ${key}`, {
+          tenantId: this.tenantId,
+          cacheKey
+        });
+        return JSON.parse(cached) as T;
+      }
+
+      this.logger.debug(`Cache miss for key: ${key}`, {
         tenantId: this.tenantId,
-        type: eventType,
-        entity,
-        entityId,
-        version: 1, // Will be incremented by entity
-        payload,
-        metadata,
-        timestamp: new Date()
-      };
-
-      await eventBus.publish(event);
-    } catch (error) {
-      console.error('Failed to publish event:', error);
-      // Don't throw error for event publishing failures
-    }
-  }
-
-  // Generate unique ID
-  protected generateId(): string {
-    return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  // Validate tenant access
-  protected async validateTenantAccess(_entityId: string, _entityType: string): Promise<boolean> {
-    // This is a basic implementation - can be enhanced based on requirements
-    return true;
-  }
-
-  // Get current timestamp
-  protected getCurrentTimestamp(): Date {
-    return new Date();
-  }
-
-  // Format currency amount
-  protected formatCurrency(amount: number, currency = 'IDR'): string {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency
-    }).format(amount);
-  }
-
-  // Validate email format
-  protected validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  // Sanitize input string
-  protected sanitizeString(input: string): string {
-    return input.trim().replace(/[<>]/g, '');
-  }
-
-  // Generate random string
-  protected generateRandomString(length: number): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
-
-  // Check if user has permission
-  protected async hasPermission(permission: string): Promise<boolean> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: this.userId },
-        include: { role: true }
+        cacheKey
       });
 
-      if (!user || !user.role) return false;
-
-      const permissions = user.role.permissions as string[];
-      return permissions.includes(permission);
+      const data = await fetcher();
+      await this.redis.setex(cacheKey, ttl, JSON.stringify(data));
+      
+      return data;
     } catch (error) {
-      console.error('Permission check failed:', error);
-      return false;
-    }
-  }
-
-  // Get user role
-  protected async getUserRole(): Promise<string | null> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: this.userId },
-        include: { role: true }
+      this.logger.warn(`Cache operation failed for key: ${key}`, {
+        tenantId: this.tenantId,
+        cacheKey,
+        error: error instanceof Error ? error.message : String(error)
       });
-
-      return user?.role?.name ?? null;
-    } catch (error) {
-      console.error('Failed to get user role:', error);
-      return null;
+      // Fallback to direct fetch on cache failure
+      return await fetcher();
     }
   }
 
-  // Health check
-  async healthCheck(): Promise<boolean> {
+  /**
+   * Invalidate cache for specific patterns
+   */
+  protected async invalidateCache(pattern: string): Promise<void> {
+    const cachePattern = `tenant:${this.tenantId}:${pattern}`;
     try {
-      // Check database connection
-      await this.prisma.$queryRaw`SELECT 1`;
-      
-      // Check Redis connection
-      await redis.ping();
-      
-      return true;
+      const keys = await this.redis.keys(cachePattern);
+      if (keys.length > 0) {
+        await this.redis.del(...keys);
+        this.logger.debug(`Cache invalidated for pattern: ${pattern}`, {
+          tenantId: this.tenantId,
+          pattern: cachePattern,
+          keysCount: keys.length
+        });
+      }
     } catch (error) {
-      console.error('Health check failed:', error);
-      return false;
+      this.logger.warn(`Cache invalidation failed for pattern: ${pattern}`, {
+        tenantId: this.tenantId,
+        pattern: cachePattern,
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
+  }
+
+  /**
+   * Generate correlation ID for request tracing
+   * Implementation Guide: Telemetry with correlationId
+   */
+  private generateCorrelationId(): string {
+    return `corr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Record query performance metrics
+   * Implementation Guide: Performance monitoring and SLOs
+   */
+  private recordQueryLatency(operation: string, executionTime: number): void {
+    // Record metrics for monitoring (can be extended with actual metrics system)
+    this.logger.debug(`Query performance recorded`, {
+      tenantId: this.tenantId,
+      operation,
+      executionTime,
+      performance: executionTime <= 100 ? 'good' : executionTime <= 300 ? 'warning' : 'critical'
+    });
+  }
+
+  /**
+   * Validate tenant context
+   * Implementation Guide: Multi-tenancy with tenant-scoped operations
+   */
+  protected validateTenantContext(): void {
+    if (!this.tenantId) {
+      throw new Error('Tenant context is required for all operations');
+    }
+  }
+
+  /**
+   * Get tenant-scoped cache key
+   */
+  protected getTenantCacheKey(key: string): string {
+    return `tenant:${this.tenantId}:${key}`;
   }
 }

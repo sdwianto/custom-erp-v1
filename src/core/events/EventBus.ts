@@ -175,12 +175,12 @@ export class EventBus {
                 const [, fields] = message;
                 const eventData = fields.find((field: unknown) => {
                   if (Array.isArray(field) && field.length >= 2) {
-                    return field[0] === 'event';
+                    return (field as unknown[])[0] === 'event';
                   }
                   return false;
                 });
                 if (eventData && Array.isArray(eventData) && eventData.length >= 2) {
-                  const eventString = eventData[1];
+                  const eventString = (eventData as unknown[])[1];
                   if (typeof eventString === 'string') {
                     try {
                       const event: DomainEvent = JSON.parse(eventString);
@@ -243,12 +243,12 @@ export class EventBus {
                 const [id, fields] = message;
                 const eventData = fields.find((field: unknown) => {
                   if (Array.isArray(field) && field.length >= 2) {
-                    return field[0] === 'event';
+                    return (field as unknown[])[0] === 'event';
                   }
                   return false;
                 });
                 if (eventData && Array.isArray(eventData) && eventData.length >= 2) {
-                  const eventString = eventData[1];
+                  const eventString = (eventData as unknown[])[1];
                   if (typeof eventString === 'string') {
                     try {
                       const event: DomainEvent = JSON.parse(eventString);
