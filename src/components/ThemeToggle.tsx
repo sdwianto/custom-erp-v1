@@ -34,6 +34,9 @@ export function ThemeToggle() {
         <DropdownMenuItem onClick={() => setTheme("system")}>
           System
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("erp-corporate")}>
+          ERP Corporate
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

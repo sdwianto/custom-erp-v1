@@ -1,3 +1,5 @@
+'use client';
+
 import { 
   BarChart3, 
   Package, 
@@ -27,8 +29,9 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ThemeToggle } from "../ThemeToggle";
 
 
@@ -81,11 +84,10 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const router = useRouter();
-
+  const pathname = usePathname();
 
   const isActive = (path: string) => {
-    return router.pathname.startsWith(path);
+    return pathname.startsWith(path);
   };
 
   return (
@@ -93,8 +95,19 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="flex h-screen w-full">
         <Sidebar>
           <SidebarHeader className="p-4">
-            <h2 className="text-xl font-bold">NextGen ERP</h2>
-            <p className="text-xs text-muted-foreground">Enterprise Resource Planning</p>
+            <div className="flex items-center gap-3">
+              <Image 
+                src="/erp-logo.svg" 
+                alt="ERP Logo" 
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
+              <div>
+                <h2 className="text-xl font-bold">Custom ERP</h2>
+                <p className="text-xs text-muted-foreground">Enterprise Resource Planning</p>
+              </div>
+            </div>
           </SidebarHeader>
           <SidebarContent className="px-4">
             
@@ -293,7 +306,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter className="p-4">
-            <p className="text-muted-foreground text-xs">NextGen ERP v1.0</p>
+            <p className="text-muted-foreground text-xs">Custom ERP v1</p>
             <p className="text-muted-foreground text-xs">Papua New Guinea</p>
             <div className="flex items-center gap-2 mt-2">
               <ThemeToggle />

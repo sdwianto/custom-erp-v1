@@ -8,11 +8,7 @@ import {
   AlertTriangle, 
   CheckCircle, 
   Plus,
-  Settings,
-  FileText,
   DollarSign,
-  MapPin,
-  User,
 } from 'lucide-react';
 
 interface MaintenanceStats {
@@ -35,7 +31,7 @@ interface MaintenanceCardProps {
 
 export const MaintenanceCard: React.FC<MaintenanceCardProps> = ({
   stats,
-  onViewMaintenance,
+  onViewMaintenance: _onViewMaintenance,
   onScheduleMaintenance,
   onViewOverdue,
   onViewCompleted,

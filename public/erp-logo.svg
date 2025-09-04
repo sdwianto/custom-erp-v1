@@ -1,0 +1,42 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients for 3D effect -->
+    <radialGradient id="outerGoldGradient" cx="0.3" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="50%" stop-color="#FFCA28"/>
+      <stop offset="100%" stop-color="#FFA000"/>
+    </radialGradient>
+    
+    <radialGradient id="innerBlueGradient" cx="0.3" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#87CEEB"/>
+      <stop offset="50%" stop-color="#1976D2"/>
+      <stop offset="100%" stop-color="#0D47A1"/>
+    </radialGradient>
+    
+    <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5F5F5"/>
+      <stop offset="25%" stop-color="#E0E0E0"/>
+      <stop offset="50%" stop-color="#BDBDBD"/>
+      <stop offset="75%" stop-color="#9E9E9E"/>
+      <stop offset="100%" stop-color="#757575"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer golden ring -->
+  <circle cx="100" cy="100" r="95" fill="url(#outerGoldGradient)" stroke="url(#silverGradient)" stroke-width="3"/>
+  
+  <!-- Middle silver ring -->
+  <circle cx="100" cy="100" r="78" fill="url(#silverGradient)" stroke="#666" stroke-width="1"/>
+  
+  <!-- Inner silver ring -->
+  <circle cx="100" cy="100" r="68" fill="url(#silverGradient)" stroke="#333" stroke-width="2"/>
+  
+  <!-- Main blue circle -->
+  <circle cx="100" cy="100" r="58" fill="url(#innerBlueGradient)" stroke="#000" stroke-width="2"/>
+  
+  <!-- Highlight for 3D effect -->
+  <ellipse cx="85" cy="85" rx="15" ry="20" fill="rgba(255,255,255,0.3)" transform="rotate(-30 85 85)"/>
+  
+  <!-- ERP Text - Made larger and more prominent -->
+  <text x="100" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" stroke="rgba(0,0,0,0.3)" stroke-width="1">ERP</text>
+</svg>

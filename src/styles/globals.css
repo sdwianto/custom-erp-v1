@@ -75,37 +75,38 @@
 
 :root {
   --radius: 0.5rem;
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.20 0 0);
-  --card: oklch(0.99 0 0);
-  --card-foreground: oklch(0.20 0 0);
-  --popover: oklch(0.99 0 0);
-  --popover-foreground: oklch(0.44 0 0);
-  --primary: oklch(0.83 0.13 160.91);
-  --primary-foreground: oklch(0.26 0.01 166.46);
-  --secondary: oklch(0.99 0 0);
-  --secondary-foreground: oklch(0.20 0 0);
-  --muted: oklch(0.95 0 0);
-  --muted-foreground: oklch(0.24 0 0);
-  --accent: oklch(0.95 0 0);
-  --accent-foreground: oklch(0.24 0 0);
+  /* ERP Logo-based color scheme - Light mode */
+  --background: oklch(0.98 0.02 220); /* Light blue-gray background */
+  --foreground: oklch(0.15 0.08 220); /* Dark blue text */
+  --card: oklch(0.99 0.01 220);
+  --card-foreground: oklch(0.15 0.08 220);
+  --popover: oklch(0.99 0.01 220);
+  --popover-foreground: oklch(0.40 0.06 220);
+  --primary: oklch(0.55 0.18 220); /* ERP Blue (#1976D2) */
+  --primary-foreground: oklch(0.98 0.01 220);
+  --secondary: oklch(0.85 0.08 45); /* ERP Gold accent */
+  --secondary-foreground: oklch(0.15 0.08 220);
+  --muted: oklch(0.92 0.02 220);
+  --muted-foreground: oklch(0.45 0.03 220);
+  --accent: oklch(0.80 0.12 45); /* Gold accent */
+  --accent-foreground: oklch(0.15 0.08 220);
   --destructive: oklch(0.55 0.19 32.73);
-  --border: oklch(0.90 0 0);
-  --input: oklch(0.97 0 0);
-  --ring: oklch(0.83 0.13 160.91);
-  --chart-1: oklch(0.83 0.13 160.91);
-  --chart-2: oklch(0.62 0.19 259.81);
-  --chart-3: oklch(0.61 0.22 292.72);
-  --chart-4: oklch(0.77 0.16 70.08);
-  --chart-5: oklch(0.70 0.15 162.48);
-  --sidebar: oklch(0.99 0 0);
-  --sidebar-foreground: oklch(0.55 0 0);
-  --sidebar-primary: oklch(0.83 0.13 160.91);
-  --sidebar-primary-foreground: oklch(0.26 0.01 166.46);
-  --sidebar-accent: oklch(0.95 0 0);
-  --sidebar-accent-foreground: oklch(0.24 0 0);
-  --sidebar-border: oklch(0.90 0 0);
-  --sidebar-ring: oklch(0.83 0.13 160.91);
+  --border: oklch(0.88 0.03 220);
+  --input: oklch(0.96 0.02 220);
+  --ring: oklch(0.55 0.18 220);
+  --chart-1: oklch(0.55 0.18 220); /* ERP Blue */
+  --chart-2: oklch(0.80 0.12 45); /* ERP Gold */
+  --chart-3: oklch(0.70 0.05 220); /* Light Blue */
+  --chart-4: oklch(0.60 0.03 220); /* Silver */
+  --chart-5: oklch(0.45 0.12 220); /* Dark Blue */
+  --sidebar: oklch(0.96 0.02 220);
+  --sidebar-foreground: oklch(0.45 0.06 220);
+  --sidebar-primary: oklch(0.55 0.18 220);
+  --sidebar-primary-foreground: oklch(0.98 0.01 220);
+  --sidebar-accent: oklch(0.92 0.04 220);
+  --sidebar-accent-foreground: oklch(0.25 0.08 220);
+  --sidebar-border: oklch(0.88 0.03 220);
+  --sidebar-ring: oklch(0.55 0.18 220);
   --destructive-foreground: oklch(0.99 0.00 17.21);
   --font-sans: Outfit, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -130,37 +131,38 @@
 }
 
 .dark {
-  --background: oklch(0.18 0 0);
-  --foreground: oklch(0.93 0.01 255.51);
-  --card: oklch(0.20 0 0);
-  --card-foreground: oklch(0.93 0.01 255.51);
-  --popover: oklch(0.26 0 0);
-  --popover-foreground: oklch(0.73 0 0);
-  --primary: oklch(0.44 0.10 156.76);
-  --primary-foreground: oklch(0.92 0.01 167.16);
-  --secondary: oklch(0.26 0 0);
-  --secondary-foreground: oklch(0.99 0 0);
-  --muted: oklch(0.24 0 0);
-  --muted-foreground: oklch(0.71 0 0);
-  --accent: oklch(0.31 0 0);
-  --accent-foreground: oklch(0.99 0 0);
+  /* ERP Logo-based color scheme - Dark mode */
+  --background: oklch(0.12 0.02 220); /* Dark blue background */
+  --foreground: oklch(0.90 0.02 220); /* Light blue-white text */
+  --card: oklch(0.15 0.03 220);
+  --card-foreground: oklch(0.90 0.02 220);
+  --popover: oklch(0.18 0.04 220);
+  --popover-foreground: oklch(0.85 0.02 220);
+  --primary: oklch(0.65 0.15 220); /* Lighter ERP Blue for dark mode */
+  --primary-foreground: oklch(0.12 0.02 220);
+  --secondary: oklch(0.75 0.10 45); /* ERP Gold for dark mode */
+  --secondary-foreground: oklch(0.12 0.02 220);
+  --muted: oklch(0.20 0.03 220);
+  --muted-foreground: oklch(0.65 0.02 220);
+  --accent: oklch(0.70 0.10 45); /* Gold accent for dark */
+  --accent-foreground: oklch(0.12 0.02 220);
   --destructive: oklch(0.31 0.09 29.79);
-  --border: oklch(0.28 0 0);
-  --input: oklch(0.26 0 0);
-  --ring: oklch(0.80 0.18 151.71);
-  --chart-1: oklch(0.80 0.18 151.71);
-  --chart-2: oklch(0.71 0.14 254.62);
-  --chart-3: oklch(0.71 0.16 293.54);
-  --chart-4: oklch(0.84 0.16 84.43);
-  --chart-5: oklch(0.78 0.13 181.91);
-  --sidebar: oklch(0.18 0 0);
-  --sidebar-foreground: oklch(0.63 0 0);
-  --sidebar-primary: oklch(0.44 0.10 156.76);
-  --sidebar-primary-foreground: oklch(0.92 0.01 167.16);
-  --sidebar-accent: oklch(0.31 0 0);
-  --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.28 0 0);
-  --sidebar-ring: oklch(0.80 0.18 151.71);
+  --border: oklch(0.25 0.04 220);
+  --input: oklch(0.18 0.04 220);
+  --ring: oklch(0.65 0.15 220);
+  --chart-1: oklch(0.65 0.15 220); /* ERP Blue */
+  --chart-2: oklch(0.75 0.10 45); /* ERP Gold */
+  --chart-3: oklch(0.75 0.08 220); /* Light Blue */
+  --chart-4: oklch(0.55 0.02 220); /* Silver */
+  --chart-5: oklch(0.45 0.10 220); /* Dark Blue */
+  --sidebar: oklch(0.15 0.03 220);
+  --sidebar-foreground: oklch(0.70 0.02 220);
+  --sidebar-primary: oklch(0.65 0.15 220);
+  --sidebar-primary-foreground: oklch(0.12 0.02 220);
+  --sidebar-accent: oklch(0.20 0.04 220);
+  --sidebar-accent-foreground: oklch(0.90 0.02 220);
+  --sidebar-border: oklch(0.25 0.04 220);
+  --sidebar-ring: oklch(0.65 0.15 220);
   --destructive-foreground: oklch(0.94 0.00 34.31);
   --radius: 0.5rem;
   --font-sans: Outfit, sans-serif;
@@ -184,61 +186,97 @@
   --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.43);
 }
 
-/* Custom User Theme - Purple Theme Example */
-.custom {
-  --background: oklch(0.98 0.02 280);
-  --foreground: oklch(0.15 0.02 280);
-  --card: oklch(0.99 0.01 280);
-  --card-foreground: oklch(0.15 0.02 280);
-  --popover: oklch(0.99 0.01 280);
-  --popover-foreground: oklch(0.44 0.02 280);
-  --primary: oklch(0.65 0.25 280);
-  --primary-foreground: oklch(0.98 0.01 280);
-  --secondary: oklch(0.95 0.05 280);
-  --secondary-foreground: oklch(0.20 0.02 280);
-  --muted: oklch(0.93 0.03 280);
-  --muted-foreground: oklch(0.30 0.02 280);
-  --accent: oklch(0.92 0.08 280);
-  --accent-foreground: oklch(0.25 0.02 280);
+/* ERP Corporate Theme - Based on Logo Colors */
+.erp-corporate {
+  /* Light mode ERP Corporate theme */
+  --background: oklch(0.97 0.01 220); /* Very light blue-gray */
+  --foreground: oklch(0.18 0.08 220); /* Dark blue text */
+  --card: oklch(0.98 0.01 220);
+  --card-foreground: oklch(0.18 0.08 220);
+  --popover: oklch(0.98 0.01 220);
+  --popover-foreground: oklch(0.40 0.06 220);
+  --primary: oklch(0.50 0.20 220); /* Strong ERP Blue */
+  --primary-foreground: oklch(0.98 0.01 220);
+  --secondary: oklch(0.82 0.10 45); /* ERP Gold */
+  --secondary-foreground: oklch(0.18 0.08 220);
+  --muted: oklch(0.90 0.02 220);
+  --muted-foreground: oklch(0.50 0.04 220);
+  --accent: oklch(0.78 0.14 45); /* Rich Gold accent */
+  --accent-foreground: oklch(0.18 0.08 220);
   --destructive: oklch(0.55 0.19 32.73);
-  --border: oklch(0.88 0.04 280);
-  --input: oklch(0.95 0.02 280);
-  --ring: oklch(0.65 0.25 280);
-  --chart-1: oklch(0.65 0.25 280);
-  --chart-2: oklch(0.62 0.19 259.81);
-  --chart-3: oklch(0.61 0.22 292.72);
-  --chart-4: oklch(0.77 0.16 70.08);
-  --chart-5: oklch(0.70 0.15 162.48);
-  --sidebar: oklch(0.96 0.03 280);
-  --sidebar-foreground: oklch(0.55 0.02 280);
-  --sidebar-primary: oklch(0.65 0.25 280);
-  --sidebar-primary-foreground: oklch(0.98 0.01 280);
-  --sidebar-accent: oklch(0.92 0.08 280);
-  --sidebar-accent-foreground: oklch(0.25 0.02 280);
-  --sidebar-border: oklch(0.88 0.04 280);
-  --sidebar-ring: oklch(0.65 0.25 280);
+  --border: oklch(0.85 0.04 220);
+  --input: oklch(0.94 0.02 220);
+  --ring: oklch(0.50 0.20 220);
+  --chart-1: oklch(0.50 0.20 220); /* Strong ERP Blue */
+  --chart-2: oklch(0.78 0.14 45); /* ERP Gold */
+  --chart-3: oklch(0.72 0.08 220); /* Light Blue */
+  --chart-4: oklch(0.65 0.03 220); /* Silver */
+  --chart-5: oklch(0.40 0.15 220); /* Deep Blue */
+  --sidebar: oklch(0.94 0.02 220);
+  --sidebar-foreground: oklch(0.50 0.06 220);
+  --sidebar-primary: oklch(0.50 0.20 220);
+  --sidebar-primary-foreground: oklch(0.98 0.01 220);
+  --sidebar-accent: oklch(0.90 0.05 220);
+  --sidebar-accent-foreground: oklch(0.28 0.08 220);
+  --sidebar-border: oklch(0.85 0.04 220);
+  --sidebar-ring: oklch(0.50 0.20 220);
   --destructive-foreground: oklch(0.99 0.00 17.21);
   --radius: 0.5rem;
   --font-sans: Outfit, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: monospace;
-  --shadow-color: #000000;
-  --shadow-opacity: 0.17;
-  --shadow-blur: 3px;
+  --shadow-color: rgba(25, 118, 210, 0.1); /* Blue tinted shadows */
+  --shadow-opacity: 0.15;
+  --shadow-blur: 4px;
   --shadow-spread: 0px;
   --shadow-offset-x: 0px;
-  --shadow-offset-y: 1px;
+  --shadow-offset-y: 2px;
   --letter-spacing: 0.025em;
   --spacing: 0.25rem;
-  --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
-  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
-  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 1px 2px -1px hsl(0 0% 0% / 0.17);
-  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 1px 2px -1px hsl(0 0% 0% / 0.17);
-  --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 2px 4px -1px hsl(0 0% 0% / 0.17);
-  --shadow-lg: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 4px 6px -1px hsl(0 0% 0% / 0.17);
-  --shadow-xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 8px 10px -1px hsl(0 0% 0% / 0.17);
-  --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.43);
+  --shadow-2xs: 0px 1px 3px 0px rgba(25, 118, 210, 0.08);
+  --shadow-xs: 0px 1px 3px 0px rgba(25, 118, 210, 0.08);
+  --shadow-sm: 0px 2px 4px 0px rgba(25, 118, 210, 0.12), 0px 1px 2px -1px rgba(25, 118, 210, 0.12);
+  --shadow: 0px 2px 4px 0px rgba(25, 118, 210, 0.12), 0px 1px 2px -1px rgba(25, 118, 210, 0.12);
+  --shadow-md: 0px 3px 6px 0px rgba(25, 118, 210, 0.12), 0px 2px 4px -1px rgba(25, 118, 210, 0.12);
+  --shadow-lg: 0px 4px 8px 0px rgba(25, 118, 210, 0.12), 0px 4px 6px -1px rgba(25, 118, 210, 0.12);
+  --shadow-xl: 0px 6px 12px 0px rgba(25, 118, 210, 0.12), 0px 8px 10px -1px rgba(25, 118, 210, 0.12);
+  --shadow-2xl: 0px 8px 16px 0px rgba(25, 118, 210, 0.15);
   --tracking-normal: 0.025em;
+}
+
+/* Dark mode for ERP Corporate theme */
+.dark.erp-corporate {
+  --background: oklch(0.08 0.02 220); /* Very dark blue */
+  --foreground: oklch(0.92 0.01 220); /* Light blue-white text */
+  --card: oklch(0.12 0.03 220);
+  --card-foreground: oklch(0.92 0.01 220);
+  --popover: oklch(0.15 0.04 220);
+  --popover-foreground: oklch(0.88 0.01 220);
+  --primary: oklch(0.68 0.12 220); /* Bright ERP Blue for dark */
+  --primary-foreground: oklch(0.08 0.02 220);
+  --secondary: oklch(0.72 0.08 45); /* Soft Gold for dark */
+  --secondary-foreground: oklch(0.08 0.02 220);
+  --muted: oklch(0.18 0.03 220);
+  --muted-foreground: oklch(0.68 0.01 220);
+  --accent: oklch(0.68 0.08 45); /* Gold accent for dark */
+  --accent-foreground: oklch(0.08 0.02 220);
+  --border: oklch(0.22 0.04 220);
+  --input: oklch(0.15 0.04 220);
+  --ring: oklch(0.68 0.12 220);
+  --chart-1: oklch(0.68 0.12 220); /* Bright ERP Blue */
+  --chart-2: oklch(0.72 0.08 45); /* ERP Gold */
+  --chart-3: oklch(0.78 0.06 220); /* Light Blue */
+  --chart-4: oklch(0.58 0.01 220); /* Silver */
+  --chart-5: oklch(0.48 0.08 220); /* Medium Blue */
+  --sidebar: oklch(0.12 0.03 220);
+  --sidebar-foreground: oklch(0.75 0.01 220);
+  --sidebar-primary: oklch(0.68 0.12 220);
+  --sidebar-primary-foreground: oklch(0.08 0.02 220);
+  --sidebar-accent: oklch(0.18 0.04 220);
+  --sidebar-accent-foreground: oklch(0.92 0.01 220);
+  --sidebar-border: oklch(0.22 0.04 220);
+  --sidebar-ring: oklch(0.68 0.12 220);
+  --shadow-color: rgba(104, 206, 235, 0.1); /* Light blue tinted shadows for dark */
 }
 
 @layer base {
@@ -249,6 +287,163 @@
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+}
+
+/* ERP Theme Enhancements */
+.erp-corporate {
+  /* Enhanced button styles with ERP colors */
+  --btn-primary-shadow: 0px 2px 4px rgba(25, 118, 210, 0.2);
+  --btn-secondary-shadow: 0px 2px 4px rgba(255, 202, 40, 0.2);
+}
+
+.erp-corporate .bg-primary {
+  background: linear-gradient(135deg, oklch(0.50 0.20 220), oklch(0.45 0.22 220));
+}
+
+.erp-corporate .bg-secondary {
+  background: linear-gradient(135deg, oklch(0.82 0.10 45), oklch(0.78 0.12 45));
+}
+
+.erp-corporate .bg-accent {
+  background: linear-gradient(135deg, oklch(0.78 0.14 45), oklch(0.74 0.16 45));
+}
+
+/* Dark mode ERP enhancements */
+.dark.erp-corporate .bg-primary {
+  background: linear-gradient(135deg, oklch(0.68 0.12 220), oklch(0.72 0.10 220));
+}
+
+.dark.erp-corporate .bg-secondary {
+  background: linear-gradient(135deg, oklch(0.72 0.08 45), oklch(0.76 0.06 45));
+}
+
+/* Sidebar special styling for ERP theme */
+.erp-corporate [data-sidebar] {
+  border-right: 2px solid oklch(0.85 0.04 220);
+}
+
+.dark.erp-corporate [data-sidebar] {
+  border-right: 2px solid oklch(0.22 0.04 220);
+}
+
+/* Enhanced cards for ERP theme */
+.erp-corporate .bg-card {
+  box-shadow: 0px 2px 8px rgba(25, 118, 210, 0.08);
+  border: 1px solid oklch(0.85 0.04 220);
+}
+
+.dark.erp-corporate .bg-card {
+  box-shadow: 0px 2px 8px rgba(104, 206, 235, 0.08);
+  border: 1px solid oklch(0.22 0.04 220);
+}
+
+/* Enhanced Table Hover Effects for All Themes */
+/* Light mode hover effects */
+:root tr:hover {
+  background-color: oklch(0.95 0.03 220) !important; /* Light blue-gray hover */
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* ERP Corporate theme hover effects */
+.erp-corporate tr:hover {
+  background-color: oklch(0.92 0.04 220) !important; /* Stronger blue-gray hover */
+  transition: background-color 0.2s ease-in-out;
+  box-shadow: 0px 1px 4px rgba(25, 118, 210, 0.1);
+}
+
+/* Dark mode hover effects */
+.dark tr:hover {
+  background-color: oklch(0.18 0.04 220) !important; /* Dark blue hover */
+  transition: background-color 0.2s ease-in-out;
+}
+
+.dark.erp-corporate tr:hover {
+  background-color: oklch(0.20 0.05 220) !important; /* Enhanced dark blue hover */
+  transition: background-color 0.2s ease-in-out;
+  box-shadow: 0px 1px 4px rgba(104, 206, 235, 0.1);
+}
+
+/* Override generic gray hover classes */
+.hover\:bg-gray-50:hover {
+  background-color: oklch(0.95 0.03 220) !important;
+}
+
+.dark .dark\:hover\:bg-gray-800:hover {
+  background-color: oklch(0.18 0.04 220) !important;
+}
+
+/* Enhanced hover for ERP Corporate theme specifically */
+.erp-corporate .hover\:bg-gray-50:hover {
+  background-color: oklch(0.92 0.04 220) !important;
+  box-shadow: 0px 1px 4px rgba(25, 118, 210, 0.1);
+}
+
+.dark.erp-corporate .dark\:hover\:bg-gray-800:hover {
+  background-color: oklch(0.20 0.05 220) !important;
+  box-shadow: 0px 1px 4px rgba(104, 206, 235, 0.1);
+}
+
+/* Additional row highlighting for selected/active states */
+.erp-corporate tr.selected {
+  background-color: oklch(0.90 0.05 220) !important;
+  border-left: 3px solid oklch(0.50 0.20 220);
+}
+
+.dark.erp-corporate tr.selected {
+  background-color: oklch(0.22 0.06 220) !important;
+  border-left: 3px solid oklch(0.68 0.12 220);
+}
+
+/* Enhanced Button Hover Effects */
+.erp-corporate button:hover,
+.erp-corporate .btn:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Enhanced Card Hover Effects */
+.erp-corporate .bg-card:hover {
+  box-shadow: 0px 4px 12px rgba(25, 118, 210, 0.12);
+  transform: translateY(-1px);
+  transition: all 0.2s ease-in-out;
+}
+
+.dark.erp-corporate .bg-card:hover {
+  box-shadow: 0px 4px 12px rgba(104, 206, 235, 0.12);
+  transform: translateY(-1px);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Badge and Status Indicator Enhancements */
+.erp-corporate .badge:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Interactive Element Highlights */
+.erp-corporate .interactive:hover,
+.erp-corporate [role="button"]:hover {
+  background-color: oklch(0.90 0.05 220);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.dark.erp-corporate .interactive:hover,
+.dark.erp-corporate [role="button"]:hover {
+  background-color: oklch(0.22 0.05 220);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Sidebar Menu Item Enhancements */
+.erp-corporate [data-sidebar] .menu-item:hover {
+  background-color: oklch(0.90 0.05 220);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.dark.erp-corporate [data-sidebar] .menu-item:hover {
+  background-color: oklch(0.22 0.05 220);
+  border-radius: 0.375rem;
+  transition: all 0.2s ease-in-out;
 }
 
 /* Global mobile typography scaling */
