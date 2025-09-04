@@ -464,13 +464,81 @@ export class EquipmentService {
   }
 
   private async schedulePreventiveMaintenance(equipmentId: string): Promise<void> {
-    // Implementation would integrate with maintenance module
-    // TODO: Integrate with maintenance module
+    try {
+      // Create preventive maintenance work order
+      const workOrder = {
+        id: `pm-${Date.now()}`,
+        equipmentId,
+        type: 'preventive',
+        priority: 'medium',
+        description: 'Scheduled preventive maintenance',
+        status: 'scheduled',
+        scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        estimatedDuration: 4, // hours
+        assignedTechnician: null,
+        partsRequired: [],
+        notes: 'Automatically scheduled based on running hours'
+      };
+
+      // Publish maintenance event
+      await this.eventManager.publish('equipment', {
+        id: `maintenance-scheduled-${Date.now()}`,
+        type: 'equipment.maintenance',
+        timestamp: new Date(),
+        data: {
+          equipmentId,
+          currentState: 'maintenance',
+          location: 'Main Yard'
+        }
+      });
+
+      // TODO: Integrate with maintenance module
+      console.log('Preventive maintenance scheduled:', workOrder);
+    } catch (error) {
+      console.error('Failed to schedule preventive maintenance:', error);
+    }
   }
 
   private async createEmergencyWorkOrder(breakdown: EquipmentBreakdown): Promise<void> {
-    // Implementation would integrate with maintenance module
-    // TODO: Integrate with maintenance module
+    try {
+      // Create emergency maintenance work order
+      const workOrder = {
+        id: `em-${Date.now()}`,
+        equipmentId: breakdown.equipmentId,
+        type: 'emergency',
+        priority: 'high',
+        description: `Emergency repair: ${breakdown.description}`,
+        status: 'urgent',
+        scheduledDate: new Date(), // Immediate
+        estimatedDuration: breakdown.severity === 'critical' ? 8 : 4, // hours
+        assignedTechnician: null,
+        partsRequired: [],
+        notes: `Breakdown severity: ${breakdown.severity}. Location: ${breakdown.location.siteName ?? 'Unknown'}`,
+        breakdownDetails: {
+          severity: breakdown.severity,
+          symptoms: breakdown.symptoms,
+          reportedBy: breakdown.reportedBy,
+          location: breakdown.location
+        }
+      };
+
+      // Publish emergency maintenance event
+      await this.eventManager.publish('equipment', {
+        id: `maintenance-emergency-${Date.now()}`,
+        type: 'equipment.maintenance',
+        timestamp: new Date(),
+        data: {
+          equipmentId: breakdown.equipmentId,
+          currentState: 'maintenance',
+          location: breakdown.location.siteName ?? 'Unknown'
+        }
+      });
+
+      // TODO: Integrate with maintenance module
+      console.log('Emergency work order created:', workOrder);
+    } catch (error) {
+      console.error('Failed to create emergency work order:', error);
+    }
   }
 
   private async invalidateEquipmentCaches(): Promise<void> {

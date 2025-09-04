@@ -1,0 +1,20 @@
+---
+description: Prisma/Postgres rules (indexes, migrations, idempotency, outbox)
+globs:
+  - "prisma/**"
+  - "apps/**/src/db/**"
+---
+
+# Prisma & Database Rules
+
+- Use Postgres as the single source of truth. Redis is transient (no durable state).
+- Add composite indexes aligned to filters/sorts, e.g. `(tenant_id, created_at DESC, id DESC)`.
+- Use cursor pagination; expose opaque Base64+HMAC cursors only.
+- Money fields: use `Decimal` with `@db.Decimal(14,2)` (or higher where needed).
+- Enable Neon PgBouncer for app connections:
+  - `DATABASE_URL` includes `pgbouncer=true`.
+  - `directUrl` (no pooler) for `prisma migrate` / introspection.
+- Create tables for **idempotency** and **outbox**; write both in the same transaction for every mutation.
+- Time-series heavy tables (usage logs, events) should support partitioning and retention.
+- Every migration must be backward-compatible (expand → backfill → contract) and include an `EXPLAIN ANALYZE` note for critical queries.
+

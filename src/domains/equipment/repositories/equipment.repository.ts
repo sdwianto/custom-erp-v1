@@ -82,71 +82,71 @@ export interface EquipmentRepository {
 export class PrismaEquipmentRepository implements EquipmentRepository {
   constructor(private db: unknown) {} // In real implementation, this would be PrismaClient
   
-  async findById(id: string): Promise<Equipment | null> {
+  async findById(_id: string): Promise<Equipment | null> {
     // Implementation would use Prisma client
     // with proper relations and optimizations
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async findByCode(code: string): Promise<Equipment | null> {
+  async findByCode(_code: string): Promise<Equipment | null> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
   async findAll(
-    filter: EquipmentFilter,
-    pagination: PaginationParams,
-    sort?: EquipmentSort
+    _filter: EquipmentFilter,
+    _pagination: PaginationParams,
+    _sort?: EquipmentSort
   ): Promise<PaginatedResponse<Equipment>> {
     // Implementation would build dynamic Prisma query
     // with proper indexing and performance optimization
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async create(equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Equipment> {
+  async create(_equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>): Promise<Equipment> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async update(id: string, updates: Partial<Equipment>): Promise<Equipment> {
+  async update(_id: string, _updates: Partial<Equipment>): Promise<Equipment> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async delete(id: string): Promise<void> {
+  async delete(_id: string): Promise<void> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
   async findAvailableForRental(
-    dateFrom: Date,
-    dateTo: Date,
-    categoryId?: string
+    _dateFrom: Date,
+    _dateTo: Date,
+    _categoryId?: string
   ): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async findByLocation(locationId: string): Promise<Equipment[]> {
+  async findByLocation(_locationId: string): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async findByOperator(operatorId: string): Promise<Equipment[]> {
+  async findByOperator(_operatorId: string): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async findMaintenanceDue(days = 7): Promise<Equipment[]> {
+  async findMaintenanceDue(_days = 7): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async findByStatus(status: Equipment['status'][]): Promise<Equipment[]> {
+  async findByStatus(_status: Equipment['status'][]): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async getKPIs(equipmentId: string, from: Date, to: Date): Promise<EquipmentKPIs> {
+  async getKPIs(_equipmentId: string, _from: Date, _to: Date): Promise<EquipmentKPIs> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async getFleetKPIs(filter: EquipmentFilter, from: Date, to: Date): Promise<EquipmentKPIs[]> {
+  async getFleetKPIs(_filter: EquipmentFilter, _from: Date, _to: Date): Promise<EquipmentKPIs[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async getUtilizationReport(from: Date, to: Date): Promise<Array<{
+  async getUtilizationReport(_from: Date, _to: Date): Promise<Array<{
     equipmentId: string;
     equipmentCode: string;
     name: string;
@@ -157,47 +157,47 @@ export class PrismaEquipmentRepository implements EquipmentRepository {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async recordUsage(usage: Omit<EquipmentUsage, 'id' | 'createdAt' | 'updatedAt'>): Promise<EquipmentUsage> {
+  async recordUsage(_usage: Omit<EquipmentUsage, 'id' | 'createdAt' | 'updatedAt'>): Promise<EquipmentUsage> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async getUsageHistory(equipmentId: string, from: Date, to: Date): Promise<EquipmentUsage[]> {
+  async getUsageHistory(_equipmentId: string, _from: Date, _to: Date): Promise<EquipmentUsage[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async recordBreakdown(breakdown: Omit<EquipmentBreakdown, 'id' | 'createdAt' | 'updatedAt'>): Promise<EquipmentBreakdown> {
+  async recordBreakdown(_breakdown: Omit<EquipmentBreakdown, 'id' | 'createdAt' | 'updatedAt'>): Promise<EquipmentBreakdown> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async getBreakdownHistory(equipmentId: string, from?: Date, to?: Date): Promise<EquipmentBreakdown[]> {
+  async getBreakdownHistory(_equipmentId: string, _from?: Date, _to?: Date): Promise<EquipmentBreakdown[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async preloadRelatedData(equipmentIds: string[]): Promise<void> {
+  async preloadRelatedData(_equipmentIds: string[]): Promise<void> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async invalidateCache(equipmentId: string): Promise<void> {
+  async invalidateCache(_equipmentId: string): Promise<void> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async bulkCreate(equipment: Array<Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Equipment[]> {
+  async bulkCreate(_equipment: Array<Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async bulkUpdate(updates: Array<{ id: string; data: Partial<Equipment> }>): Promise<Equipment[]> {
+  async bulkUpdate(_updates: Array<{ id: string; data: Partial<Equipment> }>): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async bulkDelete(ids: string[]): Promise<void> {
+  async bulkDelete(_ids: string[]): Promise<void> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async search(query: string, filter?: EquipmentFilter): Promise<Equipment[]> {
+  async search(_query: string, _filter?: EquipmentFilter): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   
-  async findSimilar(equipmentId: string): Promise<Equipment[]> {
+  async findSimilar(_equipmentId: string): Promise<Equipment[]> {
     throw new Error('Not implemented - requires Prisma setup');
   }
   

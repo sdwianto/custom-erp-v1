@@ -1,0 +1,15 @@
+---
+description: Frontend offline queue, conflict UX, encryption
+globs:
+  - "apps/web/**"
+---
+
+# Frontend Offline Rules
+
+- Queue mutations in IndexedDB with fields: `id`, `kind`, `payload`, `idempotencyKey`, `baseVersion`, `createdAt`.
+- Batch flush 100–500 mutations; exponential backoff with jitter; show queue status in UI.
+- On conflict response, keep list cursors unchanged and surface a **Conflict Inbox** with actions:
+  - accept server / override / merge fields / create adjustment.
+- Cache only necessary master data in IndexedDB; encrypt at rest (WebCrypto).  
+- SSE client: maintain last event cursor; backfill on reconnect before resuming live updates.
+

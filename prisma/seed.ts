@@ -20,16 +20,12 @@ async function main() {
       permissions: [
         'user:read', 'user:write', 'user:delete',
         'role:read', 'role:write', 'role:delete',
-        'department:read', 'department:write', 'department:delete',
         'product:read', 'product:write', 'product:delete',
         'inventory:read', 'inventory:write', 'inventory:delete',
-        'order:read', 'order:write', 'order:delete',
+        'equipment:read', 'equipment:write', 'equipment:delete',
         'finance:read', 'finance:write', 'finance:delete',
         'hr:read', 'hr:write', 'hr:delete',
         'crm:read', 'crm:write', 'crm:delete',
-        'equipment:read', 'equipment:write', 'equipment:delete',
-        'maintenance:read', 'maintenance:write', 'maintenance:delete',
-        'rental:read', 'rental:write', 'rental:delete',
         'report:read', 'report:write',
         'audit:read'
       ]
@@ -46,13 +42,10 @@ async function main() {
         'user:read',
         'product:read', 'product:write',
         'inventory:read', 'inventory:write',
-        'order:read', 'order:write',
+        'equipment:read', 'equipment:write',
         'finance:read', 'finance:write',
         'hr:read', 'hr:write',
         'crm:read', 'crm:write',
-        'equipment:read', 'equipment:write',
-        'maintenance:read', 'maintenance:write',
-        'rental:read', 'rental:write',
         'report:read'
       ]
     }
@@ -67,126 +60,28 @@ async function main() {
       permissions: [
         'product:read',
         'inventory:read', 'inventory:write',
-        'order:read', 'order:write',
-        'equipment:read',
-        'maintenance:read', 'maintenance:write'
+        'equipment:read'
       ]
     }
   });
 
-  // Create Departments
-  console.log('Creating departments...');
-  const itDept = await prisma.department.upsert({
-    where: { code: 'IT' },
-    update: {},
-    create: {
-      name: 'Information Technology',
-      code: 'IT',
-      description: 'IT and System Administration'
-    }
-  });
-
-  const financeDept = await prisma.department.upsert({
-    where: { code: 'FIN' },
-    update: {},
-    create: {
-      name: 'Finance & Accounting',
-      code: 'FIN',
-      description: 'Financial management and accounting'
-    }
-  });
-
-  const hrDept = await prisma.department.upsert({
-    where: { code: 'HR' },
-    update: {},
-    create: {
-      name: 'Human Resources',
-      code: 'HR',
-      description: 'Human resources and payroll'
-    }
-  });
-
-  const operationsDept = await prisma.department.upsert({
-    where: { code: 'OPS' },
-    update: {},
-    create: {
-      name: 'Operations',
-      code: 'OPS',
-      description: 'Daily operations and maintenance'
-    }
-  });
-
-  const salesDept = await prisma.department.upsert({
-    where: { code: 'SALES' },
-    update: {},
-    create: {
-      name: 'Sales & Marketing',
-      code: 'SALES',
-      description: 'Sales and customer relations'
-    }
-  });
-
-  // Create Admin User (placeholder - will be linked to Clerk)
+  // Create Admin User
   console.log('Creating admin user...');
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@nextgen.com' },
     update: {},
     create: {
-      clerkId: 'admin_clerk_id', // This will be replaced with actual Clerk ID
       email: 'admin@nextgen.com',
       firstName: 'System',
       lastName: 'Administrator',
       phone: '+67512345678',
-      roleId: adminRole.id,
-      departmentId: itDept.id
+      roleId: adminRole.id
     }
   });
 
   // ========================================
   // INVENTORY & PROCUREMENT SEEDING
   // ========================================
-
-  // Create Product Categories
-  console.log('Creating product categories...');
-  const heavyEquipmentCategory = await prisma.category.upsert({
-    where: { code: 'HEAVY-EQ' },
-    update: {},
-    create: {
-      name: 'Heavy Equipment',
-      code: 'HEAVY-EQ',
-      description: 'Heavy construction and mining equipment'
-    }
-  });
-
-  const sparePartsCategory = await prisma.category.upsert({
-    where: { code: 'SPARE-PARTS' },
-    update: {},
-    create: {
-      name: 'Spare Parts',
-      code: 'SPARE-PARTS',
-      description: 'Equipment spare parts and components'
-    }
-  });
-
-  const toolsCategory = await prisma.category.upsert({
-    where: { code: 'TOOLS' },
-    update: {},
-    create: {
-      name: 'Tools & Accessories',
-      code: 'TOOLS',
-      description: 'Hand tools and equipment accessories'
-    }
-  });
-
-  const consumablesCategory = await prisma.category.upsert({
-    where: { code: 'CONSUMABLES' },
-    update: {},
-    create: {
-      name: 'Consumables',
-      code: 'CONSUMABLES',
-      description: 'Consumable materials and supplies'
-    }
-  });
 
   // Create Products
   console.log('Creating products...');
@@ -200,13 +95,10 @@ async function main() {
       description: '20-ton hydraulic excavator for construction and mining',
       price: 500000000, // 500 million IDR
       costPrice: 450000000,
-      categoryId: heavyEquipmentCategory.id,
       minStockLevel: 1,
       maxStockLevel: 5,
       currentStock: 2,
-      unitOfMeasure: 'UNIT',
-      isService: false,
-      createdBy: adminUser.id
+      unitOfMeasure: 'UNIT'
     }
   });
 
@@ -220,13 +112,10 @@ async function main() {
       description: 'Track-type tractor for earthmoving operations',
       price: 750000000, // 750 million IDR
       costPrice: 675000000,
-      categoryId: heavyEquipmentCategory.id,
       minStockLevel: 1,
       maxStockLevel: 3,
       currentStock: 1,
-      unitOfMeasure: 'UNIT',
-      isService: false,
-      createdBy: adminUser.id
+      unitOfMeasure: 'UNIT'
     }
   });
 
@@ -240,13 +129,10 @@ async function main() {
       description: 'Replacement hydraulic pump for excavators',
       price: 15000000, // 15 million IDR
       costPrice: 12000000,
-      categoryId: sparePartsCategory.id,
       minStockLevel: 5,
       maxStockLevel: 20,
       currentStock: 12,
-      unitOfMeasure: 'PCS',
-      isService: false,
-      createdBy: adminUser.id
+      unitOfMeasure: 'PCS'
     }
   });
 
@@ -260,13 +146,10 @@ async function main() {
       description: 'Industrial safety helmet with chin strap',
       price: 150000, // 150k IDR
       costPrice: 100000,
-      categoryId: toolsCategory.id,
       minStockLevel: 50,
       maxStockLevel: 200,
       currentStock: 150,
-      unitOfMeasure: 'PCS',
-      isService: false,
-      createdBy: adminUser.id
+      unitOfMeasure: 'PCS'
     }
   });
 
@@ -280,141 +163,116 @@ async function main() {
       description: 'High-quality diesel fuel for heavy equipment',
       price: 15000, // 15k IDR per liter
       costPrice: 12000,
-      categoryId: consumablesCategory.id,
       minStockLevel: 1000,
       maxStockLevel: 5000,
       currentStock: 3000,
-      unitOfMeasure: 'LITER',
-      isService: false,
-      createdBy: adminUser.id
+      unitOfMeasure: 'LITER'
     }
   });
 
-  // Create Warehouses
-  console.log('Creating warehouses...');
-  const mainWarehouse = await prisma.warehouse.upsert({
-    where: { code: 'MAIN-WH' },
-    update: {},
-    create: {
-      name: 'Main Warehouse',
-      code: 'MAIN-WH',
-      address: 'Port Moresby Industrial Area, Papua New Guinea',
-      contactPerson: 'John Smith',
-      phone: '+67512345678',
-      email: 'warehouse@nextgen.com'
+  // Create AddressBook entries first
+  console.log('Creating address book entries...');
+  const komatsuAddress = await prisma.addressBook.create({
+    data: {
+      alphaName: 'Komatsu Indonesia',
+      isVendor: true,
+      addressLine1: 'Jl. Raya Bekasi Km. 25',
+      city: 'Bekasi',
+      state: 'Jawa Barat',
+      postalCode: '17530',
+      country: 'Indonesia',
+      phone: '+62-21-8990-1234',
+      email: 'info@komatsu.co.id',
+      taxNumber: '01.234.567.8-123.000'
     }
   });
 
-  const siteWarehouse = await prisma.warehouse.upsert({
-    where: { code: 'SITE-WH' },
-    update: {},
-    create: {
-      name: 'Site Warehouse',
-      code: 'SITE-WH',
-      address: 'Mining Site, Highlands Region, Papua New Guinea',
-      contactPerson: 'Mike Johnson',
-      phone: '+67587654321',
-      email: 'site-warehouse@nextgen.com'
+  const caterpillarAddress = await prisma.addressBook.create({
+    data: {
+      alphaName: 'Caterpillar Indonesia',
+      isVendor: true,
+      addressLine1: 'Jl. Sudirman Kav. 52-53',
+      city: 'Jakarta',
+      state: 'DKI Jakarta',
+      postalCode: '12190',
+      country: 'Indonesia',
+      phone: '+62-21-515-1234',
+      email: 'info@cat.com',
+      taxNumber: '01.234.567.8-456.000'
     }
   });
 
-  // Create Inventory Items
-  console.log('Creating inventory items...');
-  await prisma.inventoryItem.upsert({
-    where: {
-      productId_warehouseId: {
-        productId: excavator.id,
-        warehouseId: mainWarehouse.id
-      }
-    },
-    update: {},
-    create: {
-      productId: excavator.id,
-      warehouseId: mainWarehouse.id,
-      quantity: 2,
-      reservedQuantity: 0,
-      availableQuantity: 2
+  const miningCorpAddress = await prisma.addressBook.create({
+    data: {
+      alphaName: 'Mining Corporation Ltd',
+      isCustomer: true,
+      addressLine1: 'Jl. Gatot Subroto Kav. 18',
+      city: 'Jakarta',
+      state: 'DKI Jakarta',
+      postalCode: '12950',
+      country: 'Indonesia',
+      phone: '+62-21-520-1234',
+      email: 'info@miningcorp.co.id',
+      taxNumber: '01.234.567.8-789.000'
     }
   });
 
-  await prisma.inventoryItem.upsert({
-    where: {
-      productId_warehouseId: {
-        productId: bulldozer.id,
-        warehouseId: mainWarehouse.id
-      }
-    },
-    update: {},
-    create: {
-      productId: bulldozer.id,
-      warehouseId: mainWarehouse.id,
-      quantity: 1,
-      reservedQuantity: 0,
-      availableQuantity: 1
+  const constructionLtdAddress = await prisma.addressBook.create({
+    data: {
+      alphaName: 'Construction Ltd',
+      isCustomer: true,
+      addressLine1: 'Jl. Thamrin No. 10',
+      city: 'Jakarta',
+      state: 'DKI Jakarta',
+      postalCode: '10350',
+      country: 'Indonesia',
+      phone: '+62-21-310-1234',
+      email: 'info@construction.co.id',
+      taxNumber: '01.234.567.8-012.000'
     }
   });
 
-  await prisma.inventoryItem.upsert({
-    where: {
-      productId_warehouseId: {
-        productId: hydraulicPump.id,
-        warehouseId: mainWarehouse.id
-      }
-    },
-    update: {},
-    create: {
-      productId: hydraulicPump.id,
-      warehouseId: mainWarehouse.id,
-      quantity: 8,
-      reservedQuantity: 0,
-      availableQuantity: 8
-    }
-  });
-
-  await prisma.inventoryItem.upsert({
-    where: {
-      productId_warehouseId: {
-        productId: hydraulicPump.id,
-        warehouseId: siteWarehouse.id
-      }
-    },
-    update: {},
-    create: {
-      productId: hydraulicPump.id,
-      warehouseId: siteWarehouse.id,
-      quantity: 4,
-      reservedQuantity: 0,
-      availableQuantity: 4
+  const hrManagerAddress = await prisma.addressBook.create({
+    data: {
+      alphaName: 'Jane Doe',
+      isEmployee: true,
+      addressLine1: 'Jl. Sudirman No. 123',
+      city: 'Jakarta',
+      state: 'DKI Jakarta',
+      postalCode: '12190',
+      country: 'Indonesia',
+      phone: '+62-21-515-5678',
+      email: 'jane.doe@nextgen.com'
     }
   });
 
   // Create Suppliers
   console.log('Creating suppliers...');
   const komatsuSupplier = await prisma.supplier.upsert({
-    where: { code: 'KOMATSU' },
+    where: { supplierCode: 'KOMATSU' },
     update: {},
     create: {
-      name: 'Komatsu Indonesia',
-      code: 'KOMATSU',
-      contactPerson: 'David Chen',
-      email: 'sales@komatsu.co.id',
-      phone: '+622123456789',
-      address: 'Jakarta, Indonesia',
-      taxNumber: '123456789'
+      supplierCode: 'KOMATSU',
+      addressBookId: komatsuAddress.id,
+      paymentTerms: 'Net 30',
+      creditLimit: 1000000000,
+      currentBalance: 0,
+      onTimeDeliveryRate: 0.95,
+      qualityRating: 4.8
     }
   });
 
   const caterpillarSupplier = await prisma.supplier.upsert({
-    where: { code: 'CAT' },
+    where: { supplierCode: 'CAT' },
     update: {},
     create: {
-      name: 'Caterpillar Asia Pacific',
-      code: 'CAT',
-      contactPerson: 'Sarah Wilson',
-      email: 'info@cat.com',
-      phone: '+65987654321',
-      address: 'Singapore',
-      taxNumber: '987654321'
+      supplierCode: 'CAT',
+      addressBookId: caterpillarAddress.id,
+      paymentTerms: 'Net 45',
+      creditLimit: 2000000000,
+      currentBalance: 0,
+      onTimeDeliveryRate: 0.98,
+      qualityRating: 4.9
     }
   });
 
@@ -433,17 +291,13 @@ async function main() {
       model: 'PC200-8',
       serialNumber: 'KOM2024001',
       manufacturer: 'Komatsu',
-      yearManufactured: 2024,
-      categoryId: heavyEquipmentCategory.id,
-      purchaseDate: new Date('2024-01-15'),
-      purchasePrice: 450000000,
+      acquisitionCost: 450000000,
       currentValue: 450000000,
       status: 'AVAILABLE',
       location: 'Main Yard',
       lastMaintenanceDate: new Date('2024-01-15'),
       nextMaintenanceDate: new Date('2024-04-15'),
-      totalOperatingHours: 0,
-      createdBy: adminUser.id
+      totalOperatingHours: 0
     }
   });
 
@@ -456,17 +310,13 @@ async function main() {
       model: 'D6T',
       serialNumber: 'CAT2024001',
       manufacturer: 'Caterpillar',
-      yearManufactured: 2024,
-      categoryId: heavyEquipmentCategory.id,
-      purchaseDate: new Date('2024-02-01'),
-      purchasePrice: 675000000,
+      acquisitionCost: 675000000,
       currentValue: 675000000,
       status: 'AVAILABLE',
       location: 'Main Yard',
       lastMaintenanceDate: new Date('2024-02-01'),
       nextMaintenanceDate: new Date('2024-05-01'),
-      totalOperatingHours: 0,
-      createdBy: adminUser.id
+      totalOperatingHours: 0
     }
   });
 
@@ -476,7 +326,7 @@ async function main() {
 
   // Create Chart of Accounts
   console.log('Creating chart of accounts...');
-  const cashAccount = await prisma.account.upsert({
+  const cashAccount = await prisma.chartAccount.upsert({
     where: { accountNumber: '1000' },
     update: {},
     create: {
@@ -487,7 +337,7 @@ async function main() {
     }
   });
 
-  const accountsReceivable = await prisma.account.upsert({
+  const accountsReceivable = await prisma.chartAccount.upsert({
     where: { accountNumber: '1100' },
     update: {},
     create: {
@@ -498,7 +348,7 @@ async function main() {
     }
   });
 
-  const inventoryAccount = await prisma.account.upsert({
+  const inventoryAccount = await prisma.chartAccount.upsert({
     where: { accountNumber: '1200' },
     update: {},
     create: {
@@ -509,7 +359,7 @@ async function main() {
     }
   });
 
-  const equipmentAccount = await prisma.account.upsert({
+  const equipmentAccount = await prisma.chartAccount.upsert({
     where: { accountNumber: '1300' },
     update: {},
     create: {
@@ -520,7 +370,7 @@ async function main() {
     }
   });
 
-  const accountsPayable = await prisma.account.upsert({
+  const accountsPayable = await prisma.chartAccount.upsert({
     where: { accountNumber: '2000' },
     update: {},
     create: {
@@ -531,7 +381,7 @@ async function main() {
     }
   });
 
-  const revenueAccount = await prisma.account.upsert({
+  const revenueAccount = await prisma.chartAccount.upsert({
     where: { accountNumber: '4000' },
     update: {},
     create: {
@@ -542,7 +392,7 @@ async function main() {
     }
   });
 
-  const rentalRevenueAccount = await prisma.account.upsert({
+  const rentalRevenueAccount = await prisma.chartAccount.upsert({
     where: { accountNumber: '4100' },
     update: {},
     create: {
@@ -553,7 +403,7 @@ async function main() {
     }
   });
 
-  const costOfGoodsSold = await prisma.account.upsert({
+  const costOfGoodsSold = await prisma.chartAccount.upsert({
     where: { accountNumber: '5000' },
     update: {},
     create: {
@@ -564,7 +414,7 @@ async function main() {
     }
   });
 
-  const maintenanceExpense = await prisma.account.upsert({
+  const maintenanceExpense = await prisma.chartAccount.upsert({
     where: { accountNumber: '5100' },
     update: {},
     create: {
@@ -586,22 +436,12 @@ async function main() {
     update: {},
     create: {
       customerNumber: 'CUST-001',
-      name: 'PNG Mining Corporation',
-      type: 'COMPANY',
-      email: 'procurement@pngmining.com',
-      phone: '+67512345678',
-      address: 'Port Moresby, Papua New Guinea',
-      city: 'Port Moresby',
-      state: 'National Capital District',
-      country: 'Papua New Guinea',
-      companyName: 'PNG Mining Corporation',
-      taxNumber: 'PNG123456789',
+      addressBookId: miningCorpAddress.id,
+      customerType: 'COMPANY',
       industry: 'Mining',
-      status: 'ACTIVE',
-      source: 'Direct Contact',
       creditLimit: 1000000000, // 1 billion IDR
       currentBalance: 0,
-      createdBy: adminUser.id
+      status: 'ACTIVE'
     }
   });
 
@@ -610,22 +450,12 @@ async function main() {
     update: {},
     create: {
       customerNumber: 'CUST-002',
-      name: 'Highlands Construction Ltd',
-      type: 'COMPANY',
-      email: 'info@highlandsconstruction.pg',
-      phone: '+67587654321',
-      address: 'Goroka, Eastern Highlands, Papua New Guinea',
-      city: 'Goroka',
-      state: 'Eastern Highlands',
-      country: 'Papua New Guinea',
-      companyName: 'Highlands Construction Ltd',
-      taxNumber: 'PNG987654321',
+      addressBookId: constructionLtdAddress.id,
+      customerType: 'COMPANY',
       industry: 'Construction',
-      status: 'ACTIVE',
-      source: 'Referral',
       creditLimit: 500000000, // 500 million IDR
       currentBalance: 0,
-      createdBy: adminUser.id
+      status: 'ACTIVE'
     }
   });
 
@@ -633,45 +463,36 @@ async function main() {
   // HRMS SEEDING
   // ========================================
 
-  // Create Employees (placeholder - will be linked to actual users)
+  // Create Employees
   console.log('Creating employees...');
   const hrManager = await prisma.employee.upsert({
     where: { employeeNumber: 'EMP-001' },
     update: {},
     create: {
       employeeNumber: 'EMP-001',
-      userId: adminUser.id, // Placeholder
+      addressBookId: hrManagerAddress.id,
+      userId: adminUser.id,
       firstName: 'Jane',
       lastName: 'Doe',
       email: 'jane.doe@nextgen.com',
       phone: '+67512345678',
-      address: 'Port Moresby, Papua New Guinea',
-      dateOfBirth: new Date('1985-05-15'),
-      gender: 'FEMALE',
-      maritalStatus: 'MARRIED',
-      departmentId: hrDept.id,
       position: 'HR Manager',
       hireDate: new Date('2024-01-01'),
       employmentStatus: 'ACTIVE',
       baseSalary: 25000000, // 25 million IDR per month
-      allowances: 5000000, // 5 million IDR per month
-      emergencyContactName: 'John Doe',
-      emergencyContactPhone: '+67587654321',
-      emergencyContactRelation: 'Spouse'
+      allowances: 5000000 // 5 million IDR per month
     }
   });
 
   console.log('✅ ERP database seeding completed successfully!');
   console.log('📊 Summary of created data:');
   console.log(`   - Roles: 3`);
-  console.log(`   - Departments: 5`);
   console.log(`   - Users: 1`);
-  console.log(`   - Categories: 4`);
+  console.log(`   - AddressBook: 5`);
   console.log(`   - Products: 5`);
-  console.log(`   - Warehouses: 2`);
   console.log(`   - Suppliers: 2`);
   console.log(`   - Equipment: 2`);
-  console.log(`   - Accounts: 9`);
+  console.log(`   - Chart Accounts: 9`);
   console.log(`   - Customers: 2`);
   console.log(`   - Employees: 1`);
 }

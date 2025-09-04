@@ -1,0 +1,20 @@
+---
+description: API, SSE, Redis Streams, offline sync rules
+globs:
+  - "apps/**/src/app/api/**"
+  - "apps/**/src/routes/**"
+  - "apps/**/src/events/**"
+  - "apps/**/src/workers/**"
+---
+
+# API, Eventing & Sync Rules
+
+- All mutations accept `Idempotency-Key` and (when applicable) `baseVersion`.
+- On version mismatch, return a **conflict object** and do not overwrite server state.
+- Publish domain events via a **transactional outbox** → Redis Streams; include `type`, `entity`, `entityId`, `version`, `createdAt`, `payload`.
+- SSE:
+  - Provide `GET /api/events/stream?cursor=...` with heartbeat and retry.
+  - On reconnect: backfill from Redis Streams using the last cursor, then switch to live fan-out.
+- Do not introduce WebSockets unless explicitly requested with a concrete need and infra approval.
+- Add telemetry to each handler (route, tenantId, latency, dbTime, retries, event lag).
+

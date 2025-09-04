@@ -1,0 +1,31 @@
+---
+alwaysApply: true
+---
+# NextGen ERP — Global Cursor Rules
+
+## Tech Stack & Baselines
+- Next.js (App Router), TypeScript strict, Tailwind + shadcn/ui, React Query.
+- API: Next.js Route Handlers or small Node service; tRPC/REST; Zod validation at boundaries.
+- Data: Postgres + Prisma; Redis (Pub/Sub + Streams); SSE for realtime (no WebSockets unless explicitly requested).
+- Hybrid/offline: IndexedDB queue + idempotent replay; server-authoritative merges.
+- Security: SSO via OIDC (NextAuth), RBAC, append-only audit, PITR backups.
+
+## Golden Rules (must follow)
+R1  Use keyset pagination (cursor), never OFFSET on large tables; tie-break by `id`.  
+R2  Every query is tenant-scoped and indexed; left-most index starts with `tenant_id`.  
+R3  SSE with heartbeat + cursor backfill; publish via Redis Streams; no sticky sessions.  
+R4  Mutations are **idempotent** (`Idempotency-Key`) and carry `baseVersion` for conflict checks.  
+R5  Finance/stock writes must be **serializable** or guarded by optimistic locks; do adjustments, not blind overwrites.  
+R6  Keep diffs minimal. Do not rename/move files or APIs unless asked.  
+R7  Never hardcode secrets. Read `DATABASE_URL` and `DIRECT_URL` from env; do not log credentials.  
+R8  Prisma: add proper decimal mapping (e.g., `@db.Decimal(14,2)`) for money; create composite indexes matching filters/sorts.  
+R9  Tests required for public procedures and critical queries; include k6/perf notes when adding heavy endpoints.  
+R10 All generated code must pass ESLint/TypeScript; include types, no `any` in exported surfaces.  
+R11 Add telemetry (trace/span + correlationId) to new endpoints and workers.  
+R12 Document new events (name, payload, version) in `/docs/events.md` and publish from a transactional outbox.
+
+## Code Generation Expectations
+- When making changes: explain plan briefly, then produce a minimal patch.  
+- For DB changes: generate Prisma migration **and** the index DDL; note rollback.  
+- For endpoints: include request/response zod schemas and an example.  
+- For SSE endpoints: include reconnect/backfill logic and heartbeat.

@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+---
+# Performance Rules — NextGen ERP
+
+## 0) Golden Principles (read first)
+- **Measure before changing.** Guardrail with SLOs (e.g., p95 API ≤ 300ms; worker p95 ≤ 30s).
+- **Optimize the 80/20.** Profile first (traces/flamegraphs/EXPLAIN).
+- **Change one thing at a time**; ship with metrics and rollback.
+- **Data flow > micro-tweaks.** Fix N+1, over-fetching, and unnecessary work first.
+
+---
+
+## 1) Frontend (Next.js, React, UI)
+
+### FP1 — Prefer Server Components
+- Default to **Server Components** in App Router; add `"use client"` only when interaction is needed.
+- Keep heavy libs server-side; don’t hydrate what you don’t need.
+
+### FP2 — Route-based code splitting
+- Leverage Next’s per-route bundles (segment `page.tsx`).
+- Co-locate page-only components with the page to avoid bloating shared chunks.
+
+### FP3 — Dynamic import for heavy modules
+- Lazy-load charts, maps, rich editors, and rarely visited panels.
+- Keep heavy modules out of root layouts.
+
+### FP4 — Suspense boundaries & streaming
+- Provide loading.tsx per route segment for instant feedback.
+- Wrap lazy components in <Suspense> and stream server content as early as possible.
+
+## FP5 — Bundle hygiene
+
+- Avoid large barrel imports (e.g., import _ from "lodash"). Prefer per-function imports (lodash-es/<fn>), or small custom utils.
+- Tree-shake icons/UI (shadcn/lucide): import only the components/icons you use.
+- Use next/font and next/image (with proper sizes/fill) to optimize fonts and images.
+
+# FP6 — Data fetching & hydration size
+
+- Fetch data in Server Components whenever possible to minimize client JSON payloads.
+- For large lists use cursor pagination and virtualization; debounce search inputs; memoize expensive pure computations.
+
+# FP7 — Caching & prefetch
+- Keep Next.js <Link prefetch> enabled for internal navigation.
+- Tune React Query staleTime/cacheTime to deduplicate requests without over-stale data.
+
+# FP8 — CI budgets & gates
+
+- Initial JS per route (gz): ≤ 150 KB (hard cap 200 KB → fail build).
+- Core Web Vitals targets: LCP p75 ≤ 2.5s, INP p75 ≤ 200ms, CLS p75 ≤ 0.1.
+- Provide an analyzer script (e.g., ANALYZE=true next build) and enforce budgets in CI.
+
+# FP9 — SSR toggling (be deliberate)
+
+- Use ssr: false only for truly client-only features (canvas, maps, complex editors).
+- Prefer small client “islands” over converting entire pages to client components.
+
+# FP10 — Anti-patterns (do not do)
+
+- Importing heavy modules in root layouts or shared top-level files.
+- Shipping images without next/image.
+- OFFSET pagination on large lists (use cursor pagination instead).
+- Large, frequently changing global state causing cascaded re-renders.
+- Dragging entire utility libraries to the client when only a tiny part is needed.
