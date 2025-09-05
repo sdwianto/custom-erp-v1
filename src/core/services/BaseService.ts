@@ -6,7 +6,7 @@ import { Logger } from './Logger';
  * Base Service Class - Enterprise-grade foundation for all business services
  * Follows JDE patterns and Implementation Guide requirements
  */
-export abstract class BaseService<T = unknown> {
+export abstract class BaseService {
   protected readonly prisma: PrismaClient;
   protected readonly redis: Redis;
   protected readonly logger: Logger;

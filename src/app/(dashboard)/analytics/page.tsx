@@ -5,14 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   BarChart3, 
-  PieChart,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  DollarSign,
-  Package,
-  Users,
-  Target
+  PieChart
 } from 'lucide-react';
 
 export default function AnalyticsPage() {

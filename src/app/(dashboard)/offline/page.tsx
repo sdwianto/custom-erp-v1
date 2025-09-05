@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Activity,
@@ -29,11 +28,9 @@ const OfflineDashboard: React.FC = () => {
     isInitialized,
     isSyncing,
     stats,
-    performance,
     error,
-    initialize,
-    forceSync,
-    clearError
+    clearError,
+    forceSync
   } = useOfflineSync('default-tenant', 'current-user');
 
   React.useEffect(() => {

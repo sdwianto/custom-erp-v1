@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import { Redis } from 'ioredis';
+import type { PrismaClient } from '@prisma/client';
+import type { Redis } from 'ioredis';
 import { Logger } from './Logger';
 import { BaseService } from './BaseService';
-import { DatabaseError, DatabaseConnectionError } from './ErrorHandler';
+import { DatabaseError } from './ErrorHandler';
 
 /**
  * Database Service - Enterprise-grade database operations and monitoring
@@ -38,7 +38,7 @@ export interface IndexUsage {
  * Database Service Class
  * Implementation Guide: Database performance monitoring and optimization
  */
-export class DatabaseService extends BaseService<unknown> {
+export class DatabaseService extends BaseService {
   constructor(
     prisma: PrismaClient,
     redis: Redis,

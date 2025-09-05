@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { useDeviceManagement } from '@/hooks/useDeviceManagement';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,13 +16,11 @@ import {
   Clock,
   Database,
   Activity,
-  Settings,
   Eye,
   HardDrive,
   Smartphone,
   Monitor,
   Tablet,
-  X,
   WifiOff
 } from 'lucide-react';
 
@@ -46,6 +45,21 @@ interface PendingMutation {
   entityId: string;
 }
 
+interface Device {
+  deviceId: string;
+  deviceInfo: {
+    type: string;
+    name: string;
+    lastSeen: Date | string;
+    platform: string;
+    version: string;
+    syncStatus: string;
+  };
+  isActive: boolean;
+  tenantId: string;
+  userId: string;
+}
+
 const SyncTab: React.FC = () => {
   const [isClient, setIsClient] = React.useState(false);
 
@@ -53,7 +67,6 @@ const SyncTab: React.FC = () => {
   const {
     isOnline,
     isInitialized,
-    isSyncing,
     stats,
     performance,
     conflicts: rawConflicts,
@@ -62,9 +75,21 @@ const SyncTab: React.FC = () => {
     initialize,
     retryMutation,
     resolveConflict,
-    clearError,
-    forceSync
+    clearError
   } = useOfflineSync('default-tenant', 'current-user');
+
+  // Use device management hook
+  const {
+    devices,
+    currentDevice,
+    deviceStats,
+    isLoading: deviceLoading,
+    error: deviceError,
+    registerDevice,
+    unregisterDevice,
+    syncAllDevices,
+    refreshDevices
+  } = useDeviceManagement();
 
   // Ensure conflicts and pendingMutations are arrays with proper types
   const conflicts: Conflict[] = Array.isArray(rawConflicts) ? rawConflicts as unknown as Conflict[] : [];
@@ -76,16 +101,14 @@ const SyncTab: React.FC = () => {
     if (!isInitialized) {
       void initialize();
     }
-  }, [isInitialized, initialize]);
+    
+    // Register current device
+    if (isClient && !currentDevice) {
+      void registerDevice('default-tenant', 'current-user');
+    }
+  }, [isInitialized, initialize, isClient, currentDevice, registerDevice]);
 
-  // Mock data for devices (in real app, this would come from API)
-  const devices = [
-    { id: '1', name: 'Field Tablet 1', type: 'tablet', status: 'online', lastSync: '2024-01-15T10:30:00Z' },
-    { id: '2', name: 'Office Desktop', type: 'desktop', status: 'online', lastSync: '2024-01-15T10:25:00Z' },
-    { id: '3', name: 'Mobile Phone', type: 'mobile', status: 'offline', lastSync: '2024-01-15T09:45:00Z' },
-    { id: '4', name: 'Field Tablet 2', type: 'tablet', status: 'online', lastSync: '2024-01-15T10:20:00Z' }
-  ];
-
+  // Helper functions for device display
   const getDeviceIcon = (type: string) => {
     switch (type) {
       case 'tablet':
@@ -112,9 +135,11 @@ const SyncTab: React.FC = () => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
+  const formatTime = (timestamp: Date | string) => {
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+    return date.toLocaleString();
   };
+
 
   // Prevent hydration error by not rendering until client-side
   if (!isClient) {
@@ -364,35 +389,98 @@ const SyncTab: React.FC = () => {
       {/* Connected Devices */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5" />
-            Connected Devices
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HardDrive className="h-5 w-5" />
+              Connected Devices ({deviceStats.total})
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => refreshDevices()}
+                disabled={deviceLoading}
+              >
+                <RefreshCw className={`h-4 w-4 ${deviceLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => syncAllDevices()}
+                disabled={deviceLoading}
+              >
+                <Activity className="h-4 w-4" />
+                Sync All
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {devices.map((device) => (
-              <div key={device.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  {getDeviceIcon(device.type)}
-                  <div>
-                    <p className="font-medium">{device.name}</p>
-                    <p className="text-sm text-gray-500">
-                      Last sync: {formatTime(device.lastSync)}
-                    </p>
+          {deviceError && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Device management error: {deviceError}
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {deviceLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : devices.length === 0 ? (
+            <div className="text-center py-8">
+              <HardDrive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No devices registered</p>
+              <p className="text-sm text-gray-400">Devices will appear here when they connect</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {devices.map((device) => {
+                const typedDevice = device as Device;
+                return (
+                  <div key={typedDevice.deviceId} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      {getDeviceIcon(typedDevice.deviceInfo.type)}
+                      <div>
+                        <p className="font-medium">{typedDevice.deviceInfo.name}</p>
+                        <p className="text-sm text-gray-500">
+                          Last seen: {formatTime(typedDevice.deviceInfo.lastSeen)}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {typedDevice.deviceInfo.platform} • {typedDevice.deviceInfo.version}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(typedDevice.deviceInfo.syncStatus)}>
+                        {typedDevice.deviceInfo.syncStatus}
+                      </Badge>
+                      <Badge variant={typedDevice.isActive ? 'default' : 'secondary'}>
+                        {typedDevice.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          // Toggle device status
+                          if (typedDevice.isActive) {
+                            void unregisterDevice(typedDevice.deviceId);
+                          } else {
+                            void registerDevice(typedDevice.tenantId, typedDevice.userId);
+                          }
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge className={getStatusColor(device.status)}>
-                    {device.status}
-                  </Badge>
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -19,7 +19,7 @@ import type {
   SyncCursor, 
   BackfillRequest, 
   BackfillResult,
-  SyncStatus 
+  DeviceSyncStatus 
 } from './types';
 // import type { EventEnvelope } from '../events/types';
 
@@ -520,7 +520,7 @@ export class SSEBackfillService {
   /**
    * Get sync status for tenant
    */
-  async getSyncStatus(tenantId: string): Promise<SyncStatus> {
+  async getSyncStatus(tenantId: string): Promise<DeviceSyncStatus> {
     const connection = Array.from(this.connections.values())
       .find(conn => conn.tenantId === tenantId);
     
@@ -534,7 +534,7 @@ export class SSEBackfillService {
       failedCount: 0,
       conflictCount: 0,
       connectionQuality: this.getConnectionQuality(connection)
-    };
+    } as unknown as DeviceSyncStatus;
   }
 
   /**

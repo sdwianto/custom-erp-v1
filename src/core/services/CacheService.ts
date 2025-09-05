@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { Redis } from 'ioredis';
+import type { PrismaClient } from '@prisma/client';
+import type { Redis } from 'ioredis';
 import { Logger } from './Logger';
 import { BaseService } from './BaseService';
 
@@ -32,7 +32,7 @@ export interface CacheKey {
  * Cache Service Class
  * Implementation Guide: Cache hit rate > 80%
  */
-export class CacheService extends BaseService<unknown> {
+export class CacheService extends BaseService {
   private readonly defaultTTL: number = 3600; // 1 hour
   private readonly defaultPrefix: string = 'erp';
 

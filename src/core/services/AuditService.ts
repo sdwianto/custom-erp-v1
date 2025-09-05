@@ -42,7 +42,7 @@ export interface AuditResult {
  * Implementation Guide: Audit trail (append-only, tamper-evidence)
  * Schema-compliant implementation
  */
-export class AuditService extends BaseService<unknown> {
+export class AuditService extends BaseService {
   constructor(
     prisma: PrismaClient,
     redis: Redis,

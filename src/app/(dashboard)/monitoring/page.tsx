@@ -30,6 +30,7 @@ interface Conflict {
   createdAt: string;
   resolvedAt?: string;
   resolvedBy?: string;
+  resolution?: string;
 }
 
 interface PendingMutation {
@@ -181,7 +182,7 @@ const MonitoringPage: React.FC = () => {
               {conflicts.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              {conflicts.filter((c: any) => c?.severity === 'critical').length} critical
+              {conflicts.filter((c: Conflict) => c?.severity === 'critical').length} critical
             </p>
           </CardContent>
         </Card>
@@ -342,7 +343,7 @@ const MonitoringPage: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {conflicts.length > 0 ? (
-                    conflicts.map((conflict: any) => (
+                    conflicts.map((conflict: Conflict) => (
                       <div key={conflict.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
                           <p className="font-medium">{conflict.description}</p>
@@ -384,7 +385,7 @@ const MonitoringPage: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {pendingMutations.length > 0 ? (
-                    pendingMutations.slice(0, 10).map((mutation: any) => (
+                    pendingMutations.slice(0, 10).map((mutation: PendingMutation) => (
                       <div key={mutation.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
                           <p className="font-medium">{mutation.kind}</p>

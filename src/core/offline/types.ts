@@ -106,7 +106,7 @@ export interface QueueOperation {
   timestamp: string;
 }
 
-export interface SyncStatus {
+export interface OfflineSyncStatus {
   isOnline: boolean;
   lastSyncAt?: string;
   pendingCount: number;
@@ -128,4 +128,80 @@ export interface CompressionConfig {
   algorithm: 'gzip' | 'deflate' | 'brotli';
   level: number;                 // Compression level (1-9)
   threshold: number;             // Minimum size to compress (bytes)
+}
+
+// Device Management Types
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  type: DeviceType;
+  platform: DevicePlatform;
+  version: string;
+  lastSeen: Date;
+  isOnline: boolean;
+  syncStatus: DeviceSyncStatus;
+  capabilities: DeviceCapabilities;
+  metadata: DeviceMetadata;
+}
+
+export interface DeviceCapabilities {
+  offlineSupport: boolean;
+  backgroundSync: boolean;
+  pushNotifications: boolean;
+  camera: boolean;
+  gps: boolean;
+  storage: number; // in MB
+}
+
+export interface DeviceMetadata {
+  userAgent: string;
+  screenResolution: string;
+  timezone: string;
+  language: string;
+  networkType: string;
+  batteryLevel?: number;
+  storageUsed: number;
+  storageTotal: number;
+}
+
+export enum DeviceType {
+  DESKTOP = 'desktop',
+  TABLET = 'tablet',
+  MOBILE = 'mobile',
+  SERVER = 'server',
+  IOT = 'iot'
+}
+
+export enum DevicePlatform {
+  WINDOWS = 'windows',
+  MACOS = 'macos',
+  LINUX = 'linux',
+  ANDROID = 'android',
+  IOS = 'ios',
+  WEB = 'web'
+}
+
+export enum DeviceSyncStatus {
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  SYNCING = 'syncing',
+  ERROR = 'error',
+  PENDING = 'pending'
+}
+
+export interface DeviceSyncEvent {
+  deviceId: string;
+  eventType: 'connect' | 'disconnect' | 'sync_start' | 'sync_complete' | 'sync_error';
+  timestamp: Date;
+  data?: any;
+}
+
+export interface DeviceRegistration {
+  deviceId: string;
+  userId: string;
+  tenantId: string;
+  deviceInfo: DeviceInfo;
+  registeredAt: Date;
+  lastActive: Date;
+  isActive: boolean;
 }

@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import { Redis } from 'ioredis';
+import type { PrismaClient } from '@prisma/client';
+import type { Redis } from 'ioredis';
 import { Logger } from '../Logger';
 import { BaseService } from '../BaseService';
 import { AuditService } from '../AuditService';
@@ -35,7 +35,7 @@ export interface ItemQuery {
   limit?: number;
 }
 
-export class ItemService extends BaseService<unknown> {
+export class ItemService extends BaseService {
   private readonly auditService: AuditService;
   private readonly validationService: ValidationService;
 

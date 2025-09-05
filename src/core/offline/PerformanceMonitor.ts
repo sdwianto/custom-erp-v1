@@ -13,7 +13,7 @@
 
 import type { 
   OfflineQueueStats, 
-  SyncStatus 
+  DeviceSyncStatus 
 } from './types';
 
 export interface PerformanceTargets {
@@ -34,7 +34,7 @@ export interface PerformanceMetrics {
   sseReconnectTime: number;
   uptime: number;
   queueStats: OfflineQueueStats;
-  syncStatus: SyncStatus;
+  syncStatus: DeviceSyncStatus;
   memoryUsage: number;
   cpuUsage: number;
   networkLatency: number;
@@ -308,7 +308,7 @@ export class PerformanceMonitor {
   /**
    * Get sync status
    */
-  private async getSyncStatus(): Promise<SyncStatus> {
+  private async getSyncStatus(): Promise<DeviceSyncStatus> {
     try {
       // This would get actual sync status from SSEBackfillService
       // For now, return simulated data
@@ -320,7 +320,7 @@ export class PerformanceMonitor {
         failedCount: 0,
         conflictCount: 0,
         connectionQuality: 'excellent'
-      };
+      } as unknown as DeviceSyncStatus;
     } catch (error) {
       console.error('Failed to get sync status:', error);
       return {
@@ -330,7 +330,7 @@ export class PerformanceMonitor {
         failedCount: 0,
         conflictCount: 0,
         connectionQuality: 'offline'
-      };
+      } as unknown as DeviceSyncStatus;
     }
   }
 

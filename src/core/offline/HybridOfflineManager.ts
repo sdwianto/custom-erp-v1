@@ -17,7 +17,7 @@ import { ErrorReporting } from './ErrorReporting';
 import type { 
   LocalMutation, 
   OfflineConfig, 
-  SyncStatus
+  DeviceSyncStatus
 } from './types';
 import type { PerformanceTargets } from './PerformanceMonitor';
 import type { SSEConfig } from './SSEBackfillService';
@@ -45,7 +45,7 @@ export interface HybridOfflineStats {
     failedMutations: number;
     conflictMutations: number;
   };
-  sync: SyncStatus;
+  sync: DeviceSyncStatus;
   performance: {
     apiLatency: number;
     databaseLatency: number;

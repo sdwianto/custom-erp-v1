@@ -20,7 +20,7 @@ export type {
   IdempotencyRecord,
   OfflineConfig,
   QueueOperation,
-  SyncStatus,
+  DeviceSyncStatus,
   EncryptionConfig,
   CompressionConfig
 } from './types';

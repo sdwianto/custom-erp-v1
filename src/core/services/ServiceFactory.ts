@@ -16,7 +16,7 @@ export interface ServiceDependencies {
   userId?: string;
 }
 
-export type ServiceRegistry = Record<string, BaseService<unknown>>;
+export type ServiceRegistry = Record<string, BaseService>;
 
 export class ServiceFactory {
   private static instance: ServiceFactory;
@@ -51,7 +51,7 @@ export class ServiceFactory {
   /**
    * Get or create service instance
    */
-  getService<T extends BaseService<unknown>>(
+  getService<T extends BaseService>(
     ServiceClass: new (prisma: PrismaClient, redis: Redis, logger: Logger, tenantId: string) => T
   ): T {
     if (!this.dependencies) {
@@ -79,7 +79,7 @@ export class ServiceFactory {
   /**
    * Register a service instance
    */
-  registerService<T extends BaseService<unknown>>(
+  registerService<T extends BaseService>(
     serviceName: string,
     service: T
   ): void {
@@ -169,8 +169,8 @@ export class ServiceFactory {
 /**
  * Service decorator for automatic registration
  */
-export function RegisterService(serviceName?: string): <T extends new (prisma: PrismaClient, redis: Redis, logger: Logger, tenantId: string) => BaseService<unknown>>(constructor: T) => T {
-  return function <T extends new (prisma: PrismaClient, redis: Redis, logger: Logger, tenantId: string) => BaseService<unknown>>(constructor: T) {
+export function RegisterService(serviceName?: string): <T extends new (prisma: PrismaClient, redis: Redis, logger: Logger, tenantId: string) => BaseService>(constructor: T) => T {
+  return function <T extends new (prisma: PrismaClient, redis: Redis, logger: Logger, tenantId: string) => BaseService>(constructor: T) {
     const _name = serviceName ?? constructor.name;
     
     // Register service when class is defined
