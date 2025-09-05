@@ -39,19 +39,17 @@ model Tenant {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   email     String
   tenantId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  version   Int      @default(1)
-  isDeleted Boolean  @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  version   Int        @default(1)
+  isDeleted Boolean    @default(false)
   createdBy String?
   updatedBy String?
   name      String?
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-
-  // Relations
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
   userRoles UserRole[]
 
   @@index([tenantId, isDeleted], map: "idx_user_tenant_active")
@@ -59,18 +57,16 @@ model User {
 }
 
 model Role {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   tenantId  String
-  version   Int      @default(1)
-  isDeleted Boolean  @default(false)
+  version   Int        @default(1)
+  isDeleted Boolean    @default(false)
   createdBy String?
   updatedBy String?
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-
-  // Relations
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
   userRoles UserRole[]
 
   @@index([tenantId, name], map: "idx_role_tenant_name")
@@ -101,11 +97,9 @@ model UserRole {
   updatedBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
   role      Role     @relation(fields: [roleId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@index([tenantId, userId], map: "idx_userrole_tenant_user")
 }

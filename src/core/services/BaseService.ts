@@ -177,7 +177,7 @@ export abstract class BaseService {
    * Generate correlation ID for request tracing
    * Implementation Guide: Telemetry with correlationId
    */
-  private generateCorrelationId(): string {
+  protected generateCorrelationId(): string {
     return `corr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
